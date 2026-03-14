@@ -221,13 +221,13 @@ tfoot td{font-weight:600;color:var(--text);border-top:1px solid var(--border);bo
 .kpi12m-card .kc-label{font-size:.63rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .kpi12m-card .kc-value{font-size:1.1rem;font-weight:700;font-family:var(--mono);color:var(--text)}
 .kpi12m-card.tekort .kc-value{color:var(--danger)}
-#table12m thead th{position:sticky;top:0;background:var(--surface2);z-index:2}
-#table12m tbody tr.row-ok{background:#f0fdf4}
-#table12m tbody tr.row-ok:hover{background:#dcfce7 !important}
-#table12m tbody tr.row-fail{background:#fef2f2}
-#table12m tbody tr.row-fail:hover{background:#fee2e2 !important}
-#table12m tbody tr.row-warn{background:#fffbeb}
-#table12m tbody tr.row-warn:hover{background:#fef3c7 !important}
+#table12m thead th,#table3m thead th{position:sticky;top:0;background:var(--surface2);z-index:2}
+#table12m tbody tr.row-ok,#table3m tbody tr.row-ok{background:#f0fdf4}
+#table12m tbody tr.row-ok:hover,#table3m tbody tr.row-ok:hover{background:#dcfce7 !important}
+#table12m tbody tr.row-fail,#table3m tbody tr.row-fail{background:#fef2f2}
+#table12m tbody tr.row-fail:hover,#table3m tbody tr.row-fail:hover{background:#fee2e2 !important}
+#table12m tbody tr.row-warn,#table3m tbody tr.row-warn{background:#fffbeb}
+#table12m tbody tr.row-warn:hover,#table3m tbody tr.row-warn:hover{background:#fef3c7 !important}
 .tabel-legenda{padding:10px 14px 6px;font-size:.78rem;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap;border-top:1px solid var(--border);background:var(--surface2);border-radius:0 0 10px 10px}
 </style>
 </head>
@@ -296,14 +296,47 @@ tfoot td{font-weight:600;color:var(--text);border-top:1px solid var(--border);bo
 
 
   <div id="pane-3m" class="tab-pane">
+    <!-- 1. Legenda/uitlegblok -->
+    <div class="legenda-box">
+      <strong>Wat is 3+ maanden voorraad?</strong> Dit zijn artikelen die al meer dan 3 maanden op voorraad liggen en in de gaten gehouden worden.<br>
+      <strong>Trend deze maand:</strong> Per rij zie je hoeveel er afgebouwd is ten opzichte van het begin van de maand.<br>
+      <strong>Hoe lees je de kleuren?</strong>&ensp;
+      <span class="legenda-kleur"><span class="legenda-dot ok"></span> Rij groen = voorraad afgebouwd</span>
+      <span class="legenda-kleur"><span class="legenda-dot fail"></span> Rij rood = voorraad gestegen</span>
+      <span class="legenda-kleur"><span class="legenda-dot warn"></span> Rij oranje = geen afbouw deze maand</span>
+    </div>
+    <!-- 2. KPI-kaarten -->
+    <div class="kpi12m-strip">
+      <div class="kpi12m-card"><div class="kc-label">Begin maand</div><div class="kc-value" id="kc3-begin">—</div></div>
+      <div class="kpi12m-card"><div class="kc-label">Huidig</div><div class="kc-value" id="kc3-huidig">—</div></div>
+      <div class="kpi12m-card"><div class="kc-label">Afgebouwd</div><div class="kc-value" id="kc3-afgebouwd">—</div></div>
+      <div class="kpi12m-card"><div class="kc-label">Gem. per dag</div><div class="kc-value" id="kc3-gemdag">—</div></div>
+    </div>
     <div class="section-title">Gesorteerd op waarde 3+ maanden (hoog &rarr; laag)</div>
     <div style="margin-bottom:16px"><button class="btn ghost2" onclick="export3mPDF()" style="font-size:.82rem;padding:7px 14px">📄 PDF Export</button></div>
+    <!-- 7. Sticky header via CSS + hover-effect -->
     <div class="table-wrap">
       <table id="table3m" class="resizable-table">
-        <thead><tr><th class="sortable" onclick="sortTable('table3m',0,'num')">Nr</th><th class="sortable" onclick="sortTable('table3m',1,'str')">Afdeling</th><th class="sortable" onclick="sortTable('table3m',2,'num')">Totale Waarde</th><th class="sortable" onclick="sortTable('table3m',3,'num')">Waarde 3+ mnd</th><th class="sortable" onclick="sortTable('table3m',4,'num')">% Oudheid</th><th class="sortable" onclick="sortTable('table3m',5,'num')">Afbouw gister</th><th class="sortable" onclick="sortTable('table3m',6,'num')">Afgebouwd deze maand</th></tr></thead>
+        <!-- 5. Extra trendkolom toegevoegd -->
+        <thead><tr>
+          <th class="sortable" onclick="sortTable('table3m',0,'num')">Nr</th>
+          <th class="sortable" onclick="sortTable('table3m',1,'str')">Afdeling</th>
+          <th class="sortable" onclick="sortTable('table3m',2,'num')">Totale Waarde</th>
+          <th class="sortable" onclick="sortTable('table3m',3,'num')">Waarde 3+ mnd</th>
+          <th class="sortable" onclick="sortTable('table3m',4,'num')">% Oudheid</th>
+          <th class="sortable" onclick="sortTable('table3m',5,'num')">Afbouw gister</th>
+          <th class="sortable" onclick="sortTable('table3m',6,'num')">Afgebouwd deze maand</th>
+          <th style="text-align:left">Trend</th>
+        </tr></thead>
         <tbody></tbody>
-        <tfoot><tr><td></td><td>Totaal</td><td id="t3-totaal"></td><td id="t3-oud"></td><td id="t3-pct"></td><td id="t3-delta"></td><td id="t3-maand"></td></tr></tfoot>
+        <tfoot><tr><td></td><td>Totaal</td><td id="t3-totaal"></td><td id="t3-oud"></td><td id="t3-pct"></td><td id="t3-delta"></td><td id="t3-maand"></td><td></td></tr></tfoot>
       </table>
+      <!-- 8. Voettekst kleurlegenda -->
+      <div class="tabel-legenda">
+        <span>🟢 Voorraad afgebouwd</span>
+        <span>🔴 Voorraad gestegen</span>
+        <span>🟠 Geen afbouw deze maand</span>
+      </div>
     </div>
   </div>
 
@@ -947,9 +980,26 @@ function renderMainTable(tableId, afds, oudFn, pctFn, prev, oudKey, tTot, tOud, 
       maandCell = '<td><span class="delta-zero">—</span></td>';
     }
 
-    // Doelstelling (alleen 12m) + rijkleuring (3. & 4.)
+    // Trendbadge (alleen 3m) + rijkleuring
     let doelCell = '';
     let rowClass = '';
+    if (is3m) {
+      let trendHtml = '<span class="delta-zero">—</span>';
+      if (maandAfbouw !== null) {
+        if (maandAfbouw > 0) {
+          trendHtml = '<span class="doel-wrap ok"><span class="doel-badge ok">▼ Afgebouwd</span></span>';
+          rowClass = 'row-ok';
+        } else if (maandAfbouw < 0) {
+          trendHtml = '<span class="doel-wrap fail"><span class="doel-badge fail">▲ Gestegen</span></span>';
+          rowClass = 'row-fail';
+        } else {
+          trendHtml = '<span class="doel-wrap warn"><span class="doel-badge warn">Geen afbouw</span></span>';
+          rowClass = 'row-warn';
+        }
+      }
+      doelCell = '<td class="doel-cel">'+trendHtml+'</td>';
+    }
+    // Doelstelling (alleen 12m) + rijkleuring
     if (is12m) {
       const doel = doelen[a.nr];
       let doelHtml = '<span class="delta-zero">—</span>';
@@ -993,7 +1043,23 @@ function renderMainTable(tableId, afds, oudFn, pctFn, prev, oudKey, tTot, tOud, 
   document.getElementById(tPct).innerHTML   = '<span class="pill '+pillFn(oudTot/totaal)+'">'+fmtP(oudTot/totaal)+'</span>';
   const elDelta = document.getElementById(tDelta);
   if (elDelta) elDelta.innerHTML = dc(gisterTot);
-  if (is3m  && document.getElementById('t3-maand'))  document.getElementById('t3-maand').innerHTML  = dc(maandTot);
+  if (is3m  && document.getElementById('t3-maand')) {
+    document.getElementById('t3-maand').innerHTML = dc(maandTot);
+    // KPI-kaarten 3m vullen
+    const setKC3 = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    let totBegin3m = 0;
+    afds.forEach(a => { if (beginMap && beginMap[a.nr] !== undefined) totBegin3m += beginMap[a.nr]; });
+    const afgebouwd3m = totBegin3m > 0 ? totBegin3m - oudTot : null;
+    let gemDag3m = null;
+    if (afgebouwd3m !== null && _history && _history.length >= 2) {
+      const d = Math.max(1, Math.ceil((new Date(_history[_history.length-1].ts) - new Date(_history[0].ts)) / 86400000));
+      gemDag3m = afgebouwd3m / d;
+    }
+    setKC3('kc3-begin',     totBegin3m > 0 ? fmtE(totBegin3m) : '—');
+    setKC3('kc3-huidig',    fmtE(oudTot));
+    setKC3('kc3-afgebouwd', afgebouwd3m !== null ? fmtE(afgebouwd3m) : '—');
+    setKC3('kc3-gemdag',    gemDag3m !== null ? fmtE(gemDag3m) : '—');
+  }
   if (is12m && document.getElementById('t12-maand')) document.getElementById('t12-maand').innerHTML = dc(maandTot);
   if (is12m && document.getElementById('t12-doel')) {
     // Bereken totaal doelstelling en totaal tekort
@@ -2277,14 +2343,29 @@ function export3mPDF() {
     if (dif !== null) totDelta = (totDelta||0) + dif;
     const pct = a.totaal > 0 ? a.oud3/a.totaal : 0;
     const pc = pillCls(pct);
-    return '<tr>'
+    // 3. Rijkleuring + 4. Trendbadge
+    let rowBg = '', badgeHtml = '<span style="color:#94a3b8">—</span>';
+    if (mAfb !== null) {
+      if (mAfb > 0) {
+        rowBg = '#f0fdf4';
+        badgeHtml = '<span style="background:#dcfce7;color:#15803d;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">▼ Afgebouwd</span>';
+      } else if (mAfb < 0) {
+        rowBg = '#fef2f2';
+        badgeHtml = '<span style="background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">▲ Gestegen</span>';
+      } else {
+        rowBg = '#fffbeb';
+        badgeHtml = '<span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">Geen afbouw</span>';
+      }
+    }
+    return '<tr style="background:'+rowBg+'">'
       +'<td style="padding:4px 8px;font-size:10px;color:#6b7394">'+a.nr+'</td>'
       +'<td style="padding:4px 8px;font-size:11px;font-weight:500">'+a.naam+'</td>'
-      +'<td style="padding:4px 8px;font-size:10px;text-align:right">'+fmtE(a.totaal)+'</td>'
-      +'<td style="padding:4px 8px;font-size:10px;text-align:right;font-weight:600">'+fmtE(a.oud3)+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;text-align:right;font-variant-numeric:tabular-nums">'+fmtE(a.totaal)+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">'+fmtE(a.oud3)+'</td>'
       +'<td style="padding:4px 8px;text-align:center"><span style="background:'+pc+';padding:1px 6px;border-radius:10px;font-size:10px;font-weight:600">'+fmtP(pct)+'</span></td>'
-      +'<td style="padding:6px 10px;font-size:11px;text-align:right;color:'+pijlKleur(dif)+'">'+pijl(dif)+'</td>'
-      +'<td style="padding:6px 10px;font-size:11px;text-align:right;color:'+pijlKleur(mAfb)+'">'+pijl(mAfb)+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;text-align:right;color:'+pijlKleur(dif)+';font-variant-numeric:tabular-nums">'+pijl(dif)+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;text-align:right;color:'+pijlKleur(mAfb)+';font-variant-numeric:tabular-nums">'+pijl(mAfb)+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;white-space:nowrap">'+badgeHtml+'</td>'
       +'</tr>';
   }).join('');
 
@@ -2298,16 +2379,31 @@ function export3mPDF() {
     +'<td style="padding:5px 8px;text-align:center"><span style="background:'+totPc+';padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600">'+fmtP(totPct)+'</span></td>'
     +'<td style="padding:5px 8px;text-align:right;color:'+pijlKleur(totDelta)+'">'+pijl(totDelta)+'</td>'
     +'<td style="padding:5px 8px;text-align:right;color:'+pijlKleur(totMaand)+'">'+pijl(totMaand)+'</td>'
+    +'<td></td>'
     +'</tr>';
 
-  // Samenvatting balk
-  const samenvattingHtml = eersteVanMaand
-    ? '<div style="background:#eff6ff;border:1px solid #bfdbfe;padding:12px 16px;border-radius:6px;margin-bottom:16px;font-size:12px">'
-      +'<strong>📈 Overzicht:</strong> Begin maand: '+fmtE(beginTotaal)+' → Nu: '+fmtE(oud3tot)
-      +' → <span style="color:'+kleurV(maandAfgebouwd)+';font-weight:700">Afgebouwd: '+fmtE(maandAfgebouwd)+'</span>'
-      +(gemPerDag!==null?' → Gemiddeld per dag: <span style="color:'+kleurV(gemPerDag)+'">'+fmtE(gemPerDag)+'</span>' : '')
+  // 1. Legenda/uitlegblok
+  const legendaHtml3m = '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#1e3a6e;line-height:1.8">'
+    +'<strong>Wat is 3+ maanden voorraad?</strong> Artikelen die al meer dan 3 maanden op voorraad liggen en in de gaten worden gehouden.<br>'
+    +'<strong>Trend deze maand:</strong> Per rij zie je hoeveel er afgebouwd is ten opzichte van het begin van de maand.<br>'
+    +'<strong>Kleuren:</strong> &nbsp;'
+    +'<span style="background:#dcfce7;color:#15803d;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600">▼ Afgebouwd</span>&nbsp;'
+    +'<span style="background:#fee2e2;color:#991b1b;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600">▲ Gestegen</span>&nbsp;'
+    +'<span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600">Geen afbouw</span>'
+    +'</div>';
+
+  // 2. KPI-kaartjes
+  const kpiHtml3m = eersteVanMaand
+    ? '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Begin maand</div><div style="font-size:14px;font-weight:700;font-family:monospace">'+fmtE(beginTotaal)+'</div></div>'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Huidig</div><div style="font-size:14px;font-weight:700;font-family:monospace">'+fmtE(oud3tot)+'</div></div>'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Afgebouwd</div><div style="font-size:14px;font-weight:700;font-family:monospace;color:'+(maandAfgebouwd>=0?'#15803d':'#991b1b')+'">'+fmtE(maandAfgebouwd)+'</div></div>'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Gem. per dag</div><div style="font-size:14px;font-weight:700;font-family:monospace;color:'+(gemPerDag!==null?(gemPerDag>=0?'#15803d':'#991b1b'):'#1e2340')+'">'+(gemPerDag!==null?fmtE(gemPerDag):'—')+'</div></div>'
       +'</div>'
     : '';
+
+  // Samenvatting balk
+  const samenvattingHtml = legendaHtml3m + kpiHtml3m;
 
   const periodeStr = eersteVanMaand
     ? 'Periode: '+eersteVanMaand.datum+' t/m '+curr.datum+(dagen?' ('+dagen+' dagen)':'')+' · Vestiging 853'
@@ -2329,8 +2425,11 @@ function export3mPDF() {
     +samenvattingHtml
     +'<table><thead><tr>'
     +'<th>Nr</th><th>Afdeling</th><th class="r">Totale Waarde</th><th class="r">Waarde 3+ mnd</th>'
-    +'<th class="c">% Oudheid</th><th class="r">Afbouw gister</th><th class="r">Afgebouwd deze maand</th>'
+    +'<th class="c">% Oudheid</th><th class="r">Afbouw gister</th><th class="r">Afgebouwd deze maand</th><th>Trend</th>'
     +'</tr></thead><tbody>'+rows+totRow+'</tbody></table>'
+    +'<div style="margin-top:10px;font-size:10px;color:#6b7394;display:flex;gap:16px;flex-wrap:wrap">'
+    +'<span>🟢 Voorraad afgebouwd</span><span>🔴 Voorraad gestegen</span><span>🟠 Geen afbouw deze maand</span>'
+    +'</div>'
     +'<div class="footer">Gegenereerd: '+new Date().toLocaleString('nl-NL')+'</div>'
     +'</body></html>');
   pw.document.close();
