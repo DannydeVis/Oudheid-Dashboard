@@ -2432,18 +2432,23 @@ function export3mPDF() {
     : 'Peildatum: '+curr.datum+' · Vestiging 853';
 
   const pw = window.open('','_blank','width=1100,height=1200');
+  const fname3m = '3maanden-analyse-'+curr.datum+'.png';
   pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>3+ Maanden '+curr.datum+'</title>'
+    +'<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>'
     +'<style>*{margin:0;padding:0}body{font-family:Calibri,Arial;padding:20px}@page{margin:15mm}'
-    +'.header{background:#0f2b5b;color:white;padding:16px;border-radius:8px;margin-bottom:16px}'
-    +'.header h1{font-size:17px}.header .sub{font-size:10px;opacity:.8}'
+    +'.header{background:#0f2b5b;color:white;padding:16px;border-radius:8px;margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}'
+    +'.header-text h1{font-size:17px}.header-text .sub{font-size:10px;opacity:.8;margin-top:3px}'
+    +'.export-img-btn{background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:7px 13px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0}'
+    +'.export-img-btn:hover{background:rgba(255,255,255,.28)}'
+    +'@media print{.export-img-btn{display:none}}'
     +'table{width:100%;border-collapse:collapse}thead tr{background:#f0f2f8}'
     +'th{padding:6px 8px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#6b7394;text-align:left;border-bottom:2px solid #dde1ef}'
     +'th.r{text-align:right}th.c{text-align:center}'
     +'td{border-bottom:1px solid #e2e8f0}'
-    +'tbody tr:hover{background:#f8f9ff}'
     +'.footer{margin-top:16px;font-size:10px;text-align:center;color:#94a3b8}'
     +'</style></head><body>'
-    +'<div class="header"><h1>📊 Analyse 3+ Maanden</h1><div class="sub">'+periodeStr+'</div></div>'
+    +'<div class="header"><div class="header-text"><h1>📊 Analyse 3+ Maanden</h1><div class="sub">'+periodeStr+'</div></div>'
+    +'<button class="export-img-btn" id="exportImgBtn" onclick="exportAsImage()">📸 Exporteer als afbeelding</button></div>'
     +samenvattingHtml
     +'<table><thead><tr>'
     +'<th>Nr</th><th>Afdeling</th><th class="r">Totale Waarde</th><th class="r">Waarde 3+ mnd</th>'
@@ -2453,6 +2458,7 @@ function export3mPDF() {
     +'<span>🟢 Voorraad afgebouwd</span><span>🔴 Voorraad gestegen</span><span>🟠 Geen afbouw deze maand</span>'
     +'</div>'
     +'<div class="footer">Gegenereerd: '+new Date().toLocaleString('nl-NL')+'</div>'
+    +'<script>function exportAsImage(){var btn=document.getElementById("exportImgBtn");btn.style.display="none";html2canvas(document.body,{scrollX:0,scrollY:0,width:document.body.scrollWidth,height:document.body.scrollHeight,windowWidth:document.body.scrollWidth,windowHeight:document.body.scrollHeight,useCORS:true}).then(function(canvas){btn.style.display="";var a=document.createElement("a");a.download="'+fname3m+'";a.href=canvas.toDataURL("image/png");a.click();});}<\/script>'
     +'</body></html>');
   pw.document.close();
   setTimeout(() => pw.print(), 250);
@@ -2591,18 +2597,24 @@ function export12mPDF() {
     ? 'Periode: '+eersteVanMaand.datum+' t/m '+curr.datum+(dagen?' ('+dagen+' dagen)':'')+' · Vestiging 853'
     : 'Peildatum: '+curr.datum+' · Vestiging 853';
 
+  const fname12m = '12maanden-analyse-'+curr.datum+'.png';
   const pw = window.open('','_blank','width=1200,height=1200');
   pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>12+ Maanden '+curr.datum+'</title>'
+    +'<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>'
     +'<style>*{margin:0;padding:0}body{font-family:Calibri,Arial;padding:20px}@page{margin:15mm}'
-    +'.header{background:#0f2b5b;color:white;padding:16px;border-radius:8px;margin-bottom:16px}'
-    +'.header h1{font-size:17px}.header .sub{font-size:10px;opacity:.8}'
+    +'.header{background:#0f2b5b;color:white;padding:16px;border-radius:8px;margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}'
+    +'.header-text h1{font-size:17px}.header-text .sub{font-size:10px;opacity:.8;margin-top:3px}'
+    +'.export-img-btn{background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:7px 13px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0}'
+    +'.export-img-btn:hover{background:rgba(255,255,255,.28)}'
+    +'@media print{.export-img-btn{display:none}}'
     +'table{width:100%;border-collapse:collapse}thead tr{background:#f0f2f8}'
     +'th{padding:6px 8px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#6b7394;text-align:left;border-bottom:2px solid #dde1ef}'
     +'th.r{text-align:right}th.c{text-align:center}'
     +'td{border-bottom:1px solid #e2e8f0}'
     +'.footer{margin-top:16px;font-size:10px;text-align:center;color:#94a3b8}'
     +'</style></head><body>'
-    +'<div class="header"><h1>📊 Analyse 12+ Maanden</h1><div class="sub">'+periodeStr+'</div></div>'
+    +'<div class="header"><div class="header-text"><h1>📊 Analyse 12+ Maanden</h1><div class="sub">'+periodeStr+'</div></div>'
+    +'<button class="export-img-btn" id="exportImgBtn" onclick="exportAsImage()">📸 Exporteer als afbeelding</button></div>'
     +samenvattingHtml
     +'<table><thead><tr>'
     +'<th>Nr</th><th>Afdeling</th><th class="r">Totale Waarde</th><th class="r">Waarde 12+ mnd</th>'
@@ -2612,6 +2624,7 @@ function export12mPDF() {
     +'<span>🟢 Doel gehaald</span><span>🔴 Tekort op doel</span><span>🟠 Geen afbouw deze maand</span>'
     +'</div>'
     +'<div class="footer">Gegenereerd: '+new Date().toLocaleString('nl-NL')+'</div>'
+    +'<script>function exportAsImage(){var btn=document.getElementById("exportImgBtn");btn.style.display="none";html2canvas(document.body,{scrollX:0,scrollY:0,width:document.body.scrollWidth,height:document.body.scrollHeight,windowWidth:document.body.scrollWidth,windowHeight:document.body.scrollHeight,useCORS:true}).then(function(canvas){btn.style.display="";var a=document.createElement("a");a.download="'+fname12m+'";a.href=canvas.toDataURL("image/png");a.click();});}<\/script>'
     +'</body></html>');
   pw.document.close();
   setTimeout(() => pw.print(), 250);
