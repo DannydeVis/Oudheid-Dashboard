@@ -264,11 +264,11 @@ tfoot td{font-weight:600;color:var(--text);border-top:1px solid var(--border);bo
 
 <div id="dashboard">
   <div class="kpi-strip">
-    <div class="kpi blue"><div class="kpi-label">Totale Voorraad</div><div class="kpi-value" id="kpiTotaal">&mdash;</div><div class="kpi-sub" id="kpiAfdelingen">&mdash;</div></div>
-    <div class="kpi orange"><div class="kpi-label">Voorraad 3+ Maanden</div><div class="kpi-value" id="kpi3m">&mdash;</div><div class="kpi-delta none" id="kpi3mDelta">&mdash;</div></div>
-    <div class="kpi warn"><div class="kpi-label">Voorraad 12+ Maanden</div><div class="kpi-value" id="kpi12m">&mdash;</div><div class="kpi-delta none" id="kpi12mDelta">&mdash;</div></div>
-    <div class="kpi green"><div class="kpi-label">Afbouw Deze Week</div><div class="kpi-value" id="kpiWeek">&mdash;</div><div class="kpi-sub" id="kpiWeekSub">&mdash;</div></div>
-    <div class="kpi danger"><div class="kpi-label">Afdelingen 12+ Maanden</div><div class="kpi-value" id="kpiDoel">&mdash;</div><div class="kpi-sub">afdelingen met 12+ mnd</div></div>
+    <div class="kpi warn"><div class="kpi-label">Totale 12+ Voorraad</div><div class="kpi-value" id="kpiOud12">&mdash;</div><div class="kpi-delta none" id="kpiOud12Delta">&mdash;</div></div>
+    <div class="kpi green"><div class="kpi-label">Afgebouwd deze maand</div><div class="kpi-value" id="kpiAfgebouwd">&mdash;</div><div class="kpi-sub" id="kpiAfgebouwdSub">&mdash;</div></div>
+    <div class="kpi blue"><div class="kpi-label">Maanddoel totaal</div><div class="kpi-value" id="kpiMaanddoel">&mdash;</div><div class="kpi-sub" id="kpiMaanddoelSub">&mdash;</div></div>
+    <div class="kpi green"><div class="kpi-label">Afdelingen op schema</div><div class="kpi-value" id="kpiOpSchema">&mdash;</div><div class="kpi-sub" id="kpiOpSchemaSub">&mdash;</div></div>
+    <div class="kpi danger"><div class="kpi-label">Tekort op doel</div><div class="kpi-value" id="kpiTekort">&mdash;</div><div class="kpi-sub" id="kpiTekortSub">&mdash;</div></div>
   </div>
 
   <div class="tabs">
@@ -744,32 +744,54 @@ function renderDashboard(history) {
   const prev3    = prev ? prev.afdelingen.reduce((s,a)=>s+a.oud3,0)  : null;
   const prev12   = prev ? prev.afdelingen.reduce((s,a)=>s+a.oud12,0) : null;
 
-  const nowTs = curr.ts;
-  const week7 = history.filter(h => (nowTs-h.ts) <= 7*24*3600*1000);
-  let weekDelta3 = null;
-  if (week7.length >= 2) weekDelta3 = week7[0].afdelingen.reduce((s,a)=>s+a.oud3,0) - curr.afdelingen.reduce((s,a)=>s+a.oud3,0);
+  // ── Bereken KPI-waarden ───────────────────────────────────
+  // Begin-van-maand map voor 12m
+  const beginMap12mKpi = {};
+  if (history.length >= 2) history[0].afdelingen.forEach(a => { if (a.oud12 > 0) beginMap12mKpi[a.nr] = a.oud12; });
+  const beginTotaal12m = Object.values(beginMap12mKpi).reduce((s,v)=>s+v, 0);
+  const afgebouwdMaand12m = history.length >= 2 ? beginTotaal12m - oud12tot : null;
 
-  const afdMet12Plus = afdelingen.filter(a => a.oud12 > 0).length;
+  // Doelstellingen totalen
+  let totMaanddoel = 0, aantalMetDoel = 0, aantalOpSchema = 0;
+  afdelingen.filter(a => a.oud12 > 0).forEach(a => {
+    const d = doelen[a.nr];
+    if (d && d.nettoPerMaand) {
+      totMaanddoel += d.nettoPerMaand;
+      aantalMetDoel++;
+      const afb = beginMap12mKpi[a.nr] !== undefined ? beginMap12mKpi[a.nr] - a.oud12 : null;
+      if (afb !== null && afb >= d.nettoPerMaand) aantalOpSchema++;
+    }
+  });
+  const tekortDoel = (afgebouwdMaand12m !== null && totMaanddoel > 0)
+    ? Math.max(0, totMaanddoel - afgebouwdMaand12m) : null;
 
-  document.getElementById('kpiTotaal').textContent     = fmtE(totaal);
-  document.getElementById('kpiAfdelingen').textContent = afdelingen.length + ' afdelingen';
-  document.getElementById('kpi3m').textContent         = fmtE(oud3tot);
-  document.getElementById('kpi12m').textContent        = fmtE(oud12tot);
-  document.getElementById('kpiWeek').textContent       = weekDelta3 !== null ? fmtE(weekDelta3) : '\u2014';
-  document.getElementById('kpiWeekSub').textContent    = weekDelta3 !== null ? 'afgebouwd (7 dgn)' : 'Nog niet genoeg data';
-  document.getElementById('kpiDoel').textContent       = afdMet12Plus;
-  document.querySelector('#kpiDoel').closest('.kpi').querySelector('.kpi-sub').textContent = 'afdelingen met 12+ mnd';
+  // ── Vul KPI-kaartjes ──────────────────────────────────────
+  // 1. Totale 12+ voorraad
+  document.getElementById('kpiOud12').textContent = fmtE(oud12tot);
+  const d12 = prev12 !== null ? prev12 - oud12tot : null;
+  const elD12 = document.getElementById('kpiOud12Delta');
+  if (d12 === null) { elD12.className='kpi-delta none'; elD12.textContent='Eerste upload'; }
+  else if (d12 > 0) { elD12.className='kpi-delta down'; elD12.textContent='▼ '+fmtE(d12)+' t.o.v. vorige'; }
+  else if (d12 < 0) { elD12.className='kpi-delta up';   elD12.textContent='▲ '+fmtE(Math.abs(d12))+' t.o.v. vorige'; }
+  else              { elD12.className='kpi-delta none';  elD12.textContent='Geen wijziging'; }
 
-  function setDelta(id, cur, prv) {
-    const el = document.getElementById(id);
-    if (prv === null) { el.className='kpi-delta none'; el.textContent='Eerste upload'; return; }
-    const d = prv - cur;
-    if (d > 0)      { el.className='kpi-delta down'; el.textContent='\u25bc '+fmtE(d)+' t.o.v. vorige'; }
-    else if (d < 0) { el.className='kpi-delta up';   el.textContent='\u25b2 '+fmtE(Math.abs(d))+' t.o.v. vorige'; }
-    else            { el.className='kpi-delta none';  el.textContent='Geen wijziging'; }
-  }
-  setDelta('kpi3mDelta',  oud3tot,  prev3);
-  setDelta('kpi12mDelta', oud12tot, prev12);
+  // 2. Afgebouwd deze maand
+  document.getElementById('kpiAfgebouwd').textContent    = afgebouwdMaand12m !== null ? fmtE(afgebouwdMaand12m) : '—';
+  document.getElementById('kpiAfgebouwdSub').textContent = history.length >= 2 ? 'sinds '+history[0].datum : 'Nog niet genoeg data';
+
+  // 3. Maanddoel totaal
+  document.getElementById('kpiMaanddoel').textContent    = totMaanddoel > 0 ? fmtE(totMaanddoel) : '—';
+  document.getElementById('kpiMaanddoelSub').textContent = totMaanddoel > 0 ? 'ingesteld voor '+aantalMetDoel+' afdelingen' : 'Stel doelen in via Doelstellingen';
+
+  // 4. Afdelingen op schema
+  document.getElementById('kpiOpSchema').textContent    = aantalMetDoel > 0 ? aantalOpSchema+' van '+aantalMetDoel : '—';
+  document.getElementById('kpiOpSchemaSub').textContent = aantalMetDoel > 0 ? 'afdelingen halen doel' : 'Geen doelen ingesteld';
+  document.getElementById('kpiOpSchema').closest('.kpi').className = 'kpi '+(aantalOpSchema === aantalMetDoel && aantalMetDoel > 0 ? 'green' : aantalOpSchema > 0 ? 'warn' : 'danger');
+
+  // 5. Tekort op doel
+  document.getElementById('kpiTekort').textContent    = tekortDoel !== null ? fmtE(tekortDoel) : '—';
+  document.getElementById('kpiTekortSub').textContent = tekortDoel !== null ? (tekortDoel === 0 ? '✓ Doel gehaald!' : 'nog af te bouwen') : 'Geen doelen ingesteld';
+  document.getElementById('kpiTekort').closest('.kpi').className = 'kpi '+(tekortDoel === 0 ? 'green' : 'danger');
 
   renderBars('chart3m',  [...afdelingen].sort((a,b)=>b.oud3-a.oud3).slice(0,10),  a=>a.oud3,  a=>a.pct3,  false);
   renderBars('chart12m', [...afdelingen].sort((a,b)=>b.oud12-a.oud12).slice(0,10), a=>a.oud12, a=>a.pct12, true);
