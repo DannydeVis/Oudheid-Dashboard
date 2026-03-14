@@ -1,0 +1,2509 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voorraad Oudheid Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6fb;--surface:#fff;--surface2:#f0f2f8;--border:#dde1ef;--accent:#2563eb;--accent2:#ea580c;--warn:#d97706;--danger:#dc2626;--success:#16a34a;--text:#1e2340;--muted:#6b7394;--font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;--shadow:0 1px 3px rgba(30,35,64,.08),0 4px 16px rgba(30,35,64,.06)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;gap:16px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.topbar-brand{display:flex;align-items:center;gap:10px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.topbar-brand h1{font-size:1rem;font-weight:600}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-date{font-family:var(--mono);font-size:.78rem;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 11px}
+.btn-sm{padding:6px 14px;border-radius:6px;font-family:var(--font);font-size:.8rem;font-weight:500;border:none;cursor:pointer;transition:all .2s}
+.btn-sm.ghost{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}.btn-sm.ghost:hover{color:var(--text)}
+.btn-sm.danger{background:#fef2f2;color:var(--danger);border:1px solid #fecaca}.btn-sm.danger:hover{background:#fee2e2}
+#upload-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 57px);padding:40px}
+.upload-label{font-size:.72rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:28px}
+.dropzone{width:100%;max-width:520px;border:2px dashed var(--border);border-radius:14px;padding:56px 36px;text-align:center;cursor:pointer;transition:all .25s;background:var(--surface);position:relative;box-shadow:var(--shadow)}
+.dropzone:hover,.dropzone.over{border-color:var(--accent);background:#eff6ff;transform:translateY(-2px)}
+.dropzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:3rem;margin-bottom:16px}
+.dropzone h2{font-size:1.2rem;font-weight:600;margin-bottom:8px}
+.dropzone p{color:var(--muted);font-size:.88rem}
+.badge-fmt{display:inline-block;margin-top:14px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+.history-hint{margin-top:20px;width:100%;max-width:520px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;font-size:.85rem;color:#1d4ed8;text-align:center;display:none}
+.error-bar{margin-top:16px;width:100%;max-width:520px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;color:var(--danger);font-size:.88rem;display:none}
+.alert-bar{padding:12px 28px;font-size:.85rem;display:none;gap:10px;align-items:center;flex-wrap:wrap}
+.alert-bar.active{background:#fffbeb;border-bottom:1px solid #fde68a;color:#92400e;display:flex}
+.alert-item{background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:3px 10px;font-size:.78rem}
+#dashboard{display:none}
+.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+.kpi{background:var(--surface);padding:20px 24px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
+.kpi.blue::after{background:var(--accent)}.kpi.orange::after{background:var(--accent2)}.kpi.warn::after{background:var(--warn)}.kpi.green::after{background:var(--success)}.kpi.danger::after{background:var(--danger)}
+.kpi-label{font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.kpi-value{font-size:1.5rem;font-weight:600;font-family:var(--mono)}
+.kpi-sub{font-size:.74rem;color:var(--muted);margin-top:3px;font-family:var(--mono)}
+.kpi-delta{font-size:.78rem;margin-top:4px;font-family:var(--mono);font-weight:500}
+.kpi-delta.down{color:var(--success)}.kpi-delta.up{color:var(--danger)}.kpi-delta.none{color:var(--muted)}
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;overflow-x:auto}
+.tab{padding:14px 20px;background:none;border:none;font-family:var(--font);font-size:.85rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .2s}
+.tab:hover{color:var(--text)}.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-pane{display:none;padding:24px 28px}.tab-pane.active{display:block}
+.section-title{font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:.85rem;background:var(--surface);table-layout:auto}
+thead tr{background:var(--surface2)}
+th{padding:11px 14px;text-align:right;font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+th:nth-child(1),th:nth-child(2){text-align:left}
+th:nth-child(5){text-align:center}
+td{padding:7px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:.8rem;text-align:right}
+td.name-col{font-family:var(--font);font-weight:500;font-size:.85rem;text-align:left}
+td.nr-col{color:var(--muted);text-align:left}
+td:nth-child(5){text-align:center}
+
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#f8f9ff}
+tfoot tr{background:var(--surface2)}
+tfoot td{font-weight:600;color:var(--text);border-top:1px solid var(--border);border-bottom:none}
+.status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:.72rem;font-weight:600;font-family:var(--font)}
+.status.ok{background:#dcfce7;color:#15803d}.status.warn{background:#fef3c7;color:#92400e}.status.fail{background:#fee2e2;color:#991b1b}.status.na{background:var(--surface2);color:var(--muted)}
+.doel-wrap{display:inline-flex;align-items:center;gap:10px;font-family:var(--font);font-size:.78rem}
+.doel-badge{padding:2px 8px;border-radius:4px;font-weight:600;font-size:.71rem;white-space:nowrap;min-width:90px;text-align:center}
+.doel-badge.ok{background:#dcfce7;color:#15803d}
+.doel-badge.warn{background:#fef3c7;color:#92400e}
+.doel-badge.fail{background:#fee2e2;color:#991b1b}
+.doel-bedrag{font-family:var(--mono);font-size:.78rem;white-space:nowrap;color:var(--muted)}
+.doel-wrap.ok .doel-bedrag{color:#15803d}
+.doel-wrap.warn .doel-bedrag{color:#92400e}
+.doel-wrap.fail .doel-bedrag{color:#991b1b}
+.doel-cel{text-align:left !important;white-space:nowrap}
+.resizable-table{table-layout:fixed}
+.resizable-table th{position:relative;overflow:hidden}
+.col-resizer{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;user-select:none;z-index:1}
+.col-resizer:hover,.col-resizer.dragging{background:var(--accent);opacity:.5}
+#table3m colgroup,#table12m colgroup{}
+#table3m td:nth-child(1),#table12m td:nth-child(1){width:50px}
+#table3m td:nth-child(5),#table12m td:nth-child(5){width:90px}
+#table3m td:nth-child(6),#table12m td:nth-child(6){width:130px}
+#table3m td:nth-child(7),#table12m td:nth-child(7){width:160px}
+#table12m td:nth-child(8){width:260px}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.75rem;font-weight:500;font-family:var(--mono)}
+.pill.low{background:#dcfce7;color:#15803d}.pill.mid{background:#fef3c7;color:#92400e}.pill.high{background:#fee2e2;color:#991b1b}.pill.na{background:var(--surface2);color:var(--muted)}
+.delta-pos{color:var(--success);font-weight:500}.delta-neg{color:var(--danger);font-weight:500}.delta-zero{color:var(--muted)}
+.bar-list{display:flex;flex-direction:column;gap:8px}
+.bar-row{display:flex;align-items:center;gap:12px}
+.bar-name{min-width:180px;font-size:.8rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:24px;background:var(--surface2);border-radius:5px;overflow:hidden;border:1px solid var(--border)}
+.bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--accent),#60a5fa);display:flex;align-items:center;padding:0 8px;min-width:4px}
+.bar-fill.orange{background:linear-gradient(90deg,var(--accent2),#fb923c)}
+.bar-val{font-family:var(--mono);font-size:.72rem;color:white;white-space:nowrap}
+.bar-pct{min-width:50px;text-align:right;font-family:var(--mono);font-size:.77rem;color:var(--muted)}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;box-shadow:var(--shadow)}
+.chart-box h3{font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.timeline{display:flex;flex-direction:column;gap:4px;max-height:320px;overflow-y:auto}
+.tl-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--border)}
+.tl-row:last-child{border-bottom:none}
+.tl-date{font-family:var(--mono);font-size:.72rem;color:var(--muted);min-width:80px}
+.tl-bar-wrap{flex:1;height:16px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.tl-bar{height:100%;border-radius:4px;background:var(--accent);opacity:.7}
+.tl-val{font-family:var(--mono);font-size:.72rem;min-width:95px;text-align:right}
+.no-data{text-align:center;padding:40px 20px;color:var(--muted);font-size:.88rem}
+.doel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:16px}
+.doel-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.doel-naam{font-size:.85rem;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doel-card input[type=number]{width:70px;padding:4px 8px;border:1px solid var(--border);border-radius:5px;font-family:var(--mono);font-size:.85rem;text-align:right;background:var(--surface2)}
+.doel-card input[type=number]:focus{outline:none;border-color:var(--accent)}
+.doel-unit{font-size:.78rem;color:var(--muted);white-space:nowrap}
+.doel-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.doel-dot.ok{background:var(--success)}.doel-dot.fail{background:var(--danger)}.doel-dot.na{background:var(--border)}
+.notitie-form{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px}
+.notitie-form textarea{width:100%;border:1px solid var(--border);border-radius:6px;padding:10px;font-family:var(--font);font-size:.88rem;resize:vertical;min-height:70px;background:var(--surface2)}
+.notitie-form textarea:focus{outline:none;border-color:var(--accent)}
+.notitie-list{display:flex;flex-direction:column;gap:8px}
+.notitie-item{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:12px 14px}
+.ni-date{font-family:var(--mono);font-size:.75rem;color:var(--muted);margin-bottom:4px}
+.ni-text{font-size:.88rem;line-height:1.5}
+.bottom-bar{display:flex;gap:10px;align-items:center;padding:16px 28px;background:var(--surface);border-top:1px solid var(--border);flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:7px;font-family:var(--font);font-size:.85rem;font-weight:500;border:none;cursor:pointer;transition:all .2s}
+.btn.primary{background:var(--accent);color:white}.btn.primary:hover{background:#1d4ed8;transform:translateY(-1px)}
+.btn.ghost2{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn.ghost2:hover{background:var(--border)}
+.btn.success{background:var(--success);color:white}.btn.success:hover{background:#15803d}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:999;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:white;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.2);width:580px;max-width:95vw;max-height:82vh;display:flex;flex-direction:column}
+.modal-head{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-head h2{font-size:1rem;font-weight:600}.modal-head p{font-size:.78rem;color:var(--muted);margin-top:2px}
+.modal-body{overflow-y:auto;flex:1;padding:16px 24px}
+.modal-foot{padding:12px 24px;border-top:1px solid var(--border);background:var(--surface2);border-radius:0 0 14px 14px;font-size:.78rem;color:var(--muted)}
+.beheer-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);gap:10px}
+.beheer-row:last-child{border-bottom:none}
+.bdate{font-family:var(--mono);font-size:.85rem;font-weight:600;min-width:110px}
+.bvals{font-size:.78rem;color:var(--muted);flex:1}
+.bdel{background:#fef2f2;color:var(--danger);border:1px solid #fecaca;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:.78rem;font-weight:500}
+.bdel:hover{background:#fee2e2}
+.info-box{font-size:.8rem;color:var(--muted);background:var(--surface2);border-radius:8px;padding:10px 14px;border:1px solid var(--border);margin-top:12px}
+
+.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+.sortable:hover{color:var(--accent)}
+.sortable::after{content:' \2195';font-size:.7em;opacity:.5}
+.sortable.asc::after{content:' \2191';opacity:1;color:var(--accent)}
+.sortable.desc::after{content:' \2193';opacity:1;color:var(--accent)}
+
+.doel-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:var(--surface2);border-radius:10px;margin-bottom:20px;gap:16px;flex-wrap:wrap}
+.voortgang-lijst{display:flex;flex-direction:column;gap:10px}
+.voortgang-rij{display:grid;grid-template-columns:220px 140px 1fr 160px 100px;gap:12px;align-items:center;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;transition:all .2s}
+.voortgang-rij:hover{background:var(--surface2)}
+.vr-naam{font-size:.85rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vr-balk-wrap{height:24px;background:var(--surface2);border-radius:5px;border:1px solid var(--border);overflow:hidden}
+.vr-balk{height:100%;border-radius:5px;transition:width .3s}
+.vr-balk.ok{background:linear-gradient(90deg,var(--success),#22c55e)}
+.vr-balk.fail{background:linear-gradient(90deg,var(--danger),#f87171)}
+.vr-vals{font-family:var(--mono);font-size:.8rem;text-align:right}
+.vr-status{text-align:center}
+
+.voortgang-rij-v2{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:8px;transition:all .2s}
+.voortgang-rij-v2:hover{background:var(--surface2);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.vr-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.vr-naam-groot{font-size:.9rem;font-weight:600;color:var(--text)}
+.vr-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:8px;padding:8px 10px;background:var(--surface2);border-radius:5px}
+.vr-stat{display:flex;justify-content:space-between;align-items:center}
+.vr-label{font-size:.75rem;color:var(--muted)}
+.vr-waarde{font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--text)}
+.vr-doel-input{margin-bottom:8px}
+.vr-doel-input label{font-size:.75rem;color:var(--muted);display:block;margin-bottom:3px}
+.vr-balk-wrap{height:22px;background:var(--surface2);border-radius:5px;border:1px solid var(--border);overflow:hidden}
+.vr-balk{height:100%;border-radius:5px;transition:width .3s}
+.vr-balk.ok{background:linear-gradient(90deg,var(--success),#22c55e)}
+.vr-balk.warn{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.vr-balk.fail{background:linear-gradient(90deg,var(--danger),#f87171)}
+.manager-alerts{margin-bottom:32px}
+.alert-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.alert-card{padding:12px 16px;border-radius:8px;border-left:4px solid}
+.alert-danger{background:#fef2f2;border-left-color:#dc2626}
+.alert-warning{background:#fffbeb;border-left-color:#f59e0b}
+.alert-afd{font-size:.85rem;font-weight:600;margin-bottom:4px}
+.alert-msg{font-size:.8rem;color:var(--muted)}
+
+.manager-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:32px}
+.mgr-card{background:var(--surface);border:2px solid;border-radius:10px;padding:14px;cursor:pointer;transition:all .2s;text-align:center}
+.mgr-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.mgr-card.status-good{border-color:#16a34a;background:#f0fdf4}
+.mgr-card.status-bad{border-color:#dc2626;background:#fef2f2}
+.mgr-card.status-done{border-color:#0ea5e9;background:#f0f9ff}
+.mgr-card.status-unknown{border-color:var(--border);background:var(--surface2)}
+.mgr-nr{font-size:.75rem;color:var(--muted);margin-bottom:4px}
+.mgr-naam{font-size:.9rem;font-weight:600;margin-bottom:6px;min-height:2.5em;display:flex;align-items:center;justify-content:center}
+.mgr-waarde{font-family:var(--mono);font-size:.85rem;font-weight:600;margin-bottom:6px}
+.mgr-status{font-size:.75rem;font-weight:500}
+
+.actie-lijst{display:flex;flex-direction:column;gap:8px}
+.actie-row{display:grid;grid-template-columns:2fr 1fr 2fr auto;gap:12px;align-items:center;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.actie-row.actie-urgent{background:#fef2f2;border-color:#fca5a5;border-left:4px solid #dc2626}
+.actie-afd{font-size:.9rem;font-weight:600}
+.actie-huidig{font-family:var(--mono);font-size:.85rem;color:var(--muted)}
+.actie-doel{font-size:.85rem;color:var(--text)}
+.actie-badge{background:#dc2626;color:white;padding:4px 10px;border-radius:12px;font-size:.75rem;font-weight:700;white-space:nowrap}
+
+@media(max-width:1000px){.kpi-strip{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.kpi-strip{grid-template-columns:repeat(2,1fr)}.chart-grid{grid-template-columns:1fr}.bar-name{min-width:120px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand"><div class="dot"></div><h1>Voorraad Oudheid Dashboard</h1></div>
+  <div class="topbar-right">
+    <div class="topbar-date" id="topbarDate">&mdash;</div>
+    <button class="btn-sm ghost" id="btnNieuw">&uarr; Nieuw bestand</button>
+    <input type="file" id="fileInput2" accept=".xls,.xlsx" style="display:none">
+    <button class="btn-sm danger" id="btnReset">&#128465; Reset</button>
+  </div>
+</div>
+
+<div class="alert-bar" id="alertBar">
+  <strong>&#9888;&#65039; Drempelmelding:</strong>
+  <div id="alertItems" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+</div>
+
+<div id="upload-screen">
+  <div class="upload-label">Upload je Altwaren bestand om te beginnen</div>
+  <div class="dropzone" id="dropzone">
+    <input type="file" id="fileInput" accept=".xls,.xlsx">
+    <div class="drop-icon">&#128194;</div>
+    <h2>Sleep je Altwaren bestand hierheen</h2>
+    <p>of klik om te selecteren</p>
+    <span class="badge-fmt">.xls &nbsp;&middot;&nbsp; .xlsx</span>
+  </div>
+  <div class="history-hint" id="historyHint"></div>
+  <button class="btn primary" id="openDashboardBtn" style="display:none;margin-top:16px;font-size:1rem;padding:12px 28px" onclick="openBestaandDashboard()">📊 Open Dashboard</button>
+  <div class="error-bar" id="errorBar"></div>
+</div>
+
+<div id="dashboard">
+  <div class="kpi-strip">
+    <div class="kpi blue"><div class="kpi-label">Totale Voorraad</div><div class="kpi-value" id="kpiTotaal">&mdash;</div><div class="kpi-sub" id="kpiAfdelingen">&mdash;</div></div>
+    <div class="kpi orange"><div class="kpi-label">Voorraad 3+ Maanden</div><div class="kpi-value" id="kpi3m">&mdash;</div><div class="kpi-delta none" id="kpi3mDelta">&mdash;</div></div>
+    <div class="kpi warn"><div class="kpi-label">Voorraad 12+ Maanden</div><div class="kpi-value" id="kpi12m">&mdash;</div><div class="kpi-delta none" id="kpi12mDelta">&mdash;</div></div>
+    <div class="kpi green"><div class="kpi-label">Afbouw Deze Week</div><div class="kpi-value" id="kpiWeek">&mdash;</div><div class="kpi-sub" id="kpiWeekSub">&mdash;</div></div>
+    <div class="kpi danger"><div class="kpi-label">Afdelingen 12+ Maanden</div><div class="kpi-value" id="kpiDoel">&mdash;</div><div class="kpi-sub">afdelingen met 12+ mnd</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this,'pane-overview')">Overzicht</button>
+    <button class="tab" onclick="switchTab(this,'pane-3m')">3+ Maanden</button>
+    <button class="tab" onclick="switchTab(this,'pane-12m')">12+ Maanden</button>
+    <button class="tab" onclick="switchTab(this,'pane-doelen')">&#127919; Doelstellingen</button>
+    <button class="tab" onclick="switchTab(this,'pane-manager')">&#128084; Manager Dashboard</button>
+    <button class="tab" onclick="switchTab(this,'pane-performers')">&#128308; Slechtste Performers</button>
+    <button class="tab" onclick="switchTab(this,'pane-notities')">&#128221; Notities</button>
+    <button class="tab" onclick="switchTab(this,'pane-detail')">Details</button>
+  </div>
+
+  <div id="pane-overview" class="tab-pane active">
+    <div class="chart-grid" style="margin-bottom:24px">
+      <div><div class="section-title">Top 10 &mdash; Waarde 3+ maanden</div><div class="bar-list" id="chart3m"></div></div>
+      <div><div class="section-title">Top 10 &mdash; Waarde 12+ maanden</div><div class="bar-list" id="chart12m"></div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-box"><h3>Totale afbouw 3+ maanden &mdash; per upload</h3><div class="timeline" id="timeline3m"><div class="no-data">Upload meerdere bestanden om trends te zien</div></div></div>
+      <div class="chart-box"><h3>Totale afbouw 12+ maanden &mdash; per upload</h3><div class="timeline" id="timeline12m"><div class="no-data">Upload meerdere bestanden om trends te zien</div></div></div>
+    </div>
+  </div>
+
+
+
+  <div id="pane-3m" class="tab-pane">
+    <div class="section-title">Gesorteerd op waarde 3+ maanden (hoog &rarr; laag)</div>
+    <div style="margin-bottom:16px"><button class="btn ghost2" onclick="export3mPDF()" style="font-size:.82rem;padding:7px 14px">📄 PDF Export</button></div>
+    <div class="table-wrap">
+      <table id="table3m" class="resizable-table">
+        <thead><tr><th class="sortable" onclick="sortTable('table3m',0,'num')">Nr</th><th class="sortable" onclick="sortTable('table3m',1,'str')">Afdeling</th><th class="sortable" onclick="sortTable('table3m',2,'num')">Totale Waarde</th><th class="sortable" onclick="sortTable('table3m',3,'num')">Waarde 3+ mnd</th><th class="sortable" onclick="sortTable('table3m',4,'num')">% Oudheid</th><th class="sortable" onclick="sortTable('table3m',5,'num')">Afbouw gister</th><th class="sortable" onclick="sortTable('table3m',6,'num')">Afgebouwd deze maand</th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr><td></td><td>Totaal</td><td id="t3-totaal"></td><td id="t3-oud"></td><td id="t3-pct"></td><td id="t3-delta"></td><td id="t3-maand"></td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div id="pane-12m" class="tab-pane">
+    <div class="section-title">Gesorteerd op afdelingsnummer</div>
+    <div style="margin-bottom:16px"><button class="btn ghost2" onclick="export12mPDF()" style="font-size:.82rem;padding:7px 14px">📄 PDF Export</button></div>
+    <div class="table-wrap">
+      <table id="table12m" class="resizable-table">
+        <thead><tr><th class="sortable" onclick="sortTable('table12m',0,'num')">Nr</th><th class="sortable" onclick="sortTable('table12m',1,'str')">Afdeling</th><th class="sortable" onclick="sortTable('table12m',2,'num')">Totale Waarde</th><th class="sortable" onclick="sortTable('table12m',3,'num')">Waarde 12+ mnd</th><th class="sortable" onclick="sortTable('table12m',4,'num')">% Oudheid</th><th class="sortable" onclick="sortTable('table12m',5,'num')">Afbouw gister</th><th class="sortable" onclick="sortTable('table12m',6,'num')">Afgebouwd deze maand</th><th style="text-align:left">Vs. Doel</th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr><td></td><td>Totaal</td><td id="t12-totaal"></td><td id="t12-oud"></td><td id="t12-pct"></td><td id="t12-delta"></td><td id="t12-maand"></td><td id="t12-doel" style="text-align:left"></td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div id="pane-doelen" class="tab-pane">
+    <div id="doelContent"></div>
+  </div>
+
+
+
+  <div id="pane-manager" class="tab-pane">
+    <div id="managerContent"></div>
+  </div>
+
+  <div id="pane-performers" class="tab-pane">
+    <div class="chart-grid" style="margin-bottom:16px">
+      <div>
+        <div class="section-title">Geen of weinig afbouw &mdash; 3+ maanden</div>
+        <div class="table-wrap">
+          <table id="tablePerformers3">
+            <thead><tr><th>Afdeling</th><th>Waarde 3+ mnd</th><th>% Oudheid</th><th>Uploads zonder afbouw</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Geen of weinig afbouw &mdash; 12+ maanden</div>
+        <div class="table-wrap">
+          <table id="tablePerformers12">
+            <thead><tr><th>Afdeling</th><th>Waarde 12+ mnd</th><th>% Oudheid</th><th>Uploads zonder afbouw</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">&#128161; <strong>Geen afbouw</strong> = waarde gelijk of gestegen t.o.v. vorige upload. <strong>Uploads zonder afbouw</strong> telt hoe vaak achter elkaar er geen daling was. Waarschuwing na 3 uploads.</div>
+  </div>
+
+  <div id="pane-notities" class="tab-pane">
+    <div class="notitie-form">
+      <div class="section-title" style="margin-bottom:10px">Notitie toevoegen bij <span id="notitieUploadDatum">&mdash;</span></div>
+      <textarea id="notitieInput" placeholder="Bijv. 'Actie gestart op TELEVISIE afdeling' of 'Week met feestdag, minder transacties'..."></textarea>
+      <div style="margin-top:8px">
+        <button class="btn primary" onclick="slaNotitieOp()" style="font-size:.82rem;padding:7px 14px">&#128190; Notitie opslaan</button>
+      </div>
+    </div>
+    <div class="section-title">Eerdere notities</div>
+    <div class="notitie-list" id="notitieList"></div>
+  </div>
+
+  <div id="pane-detail" class="tab-pane">
+    <div class="section-title">Volledige uitsplitsing per leeftijdscategorie</div>
+    <div class="table-wrap">
+      <table id="tableDetail">
+        <thead><tr><th>Nr</th><th>Afdeling</th><th>0 mnd</th><th>1 mnd</th><th>2 mnd</th><th>3 mnd</th><th>4-6 mnd</th><th>7-9 mnd</th><th>10 mnd</th><th>11 mnd</th><th>12 mnd</th><th>13-24 mnd</th><th>&gt;24 mnd</th><th>Totaal</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="btn primary" onclick="exportMailExcel()">&#128231; Exporteer voor mail</button>
+    <button class="btn ghost2" onclick="exportExcel()">&#8595; Volledige export</button>
+    
+    <button class="btn ghost2" onclick="openBeheer()">&#128193; Beheer uploads</button>
+    <span style="color:var(--muted);font-size:.8rem" id="historyCount"></span>
+  </div>
+</div>
+
+<div class="modal-overlay" id="beheerModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div><h2>Beheer uploads</h2><p>Selecteer een upload om te verwijderen</p></div>
+      <button onclick="closeBeheer()" class="btn-sm ghost">&times; Sluiten</button>
+    </div>
+    <div class="modal-body" id="beheerList"></div>
+    <div class="modal-foot">&#9888;&#65039; Verwijderen kan niet ongedaan worden gemaakt</div>
+  </div>
+</div>
+
+<script>
+const STORE_KEY = 'voorraad_history_v1';
+const DOEL_KEY  = 'voorraad_doelen_v1';
+const NOTIT_KEY = 'voorraad_notities_v1';
+const ARTIKEL_KEY = 'artikelen_data_v1';
+const DREMPEL   = 3;
+
+const fmt  = n => Math.round(n).toLocaleString('nl-NL');
+const fmtE = n => '\u20ac\u202f' + fmt(n);
+const fmtP = n => (n * 100).toFixed(1) + '%';
+const pill   = p => p < 0.15 ? 'low' : p < 0.30 ? 'mid' : 'high';
+const pill12 = p => p <= 0 ? 'na' : p <= 0.01 ? 'mid' : 'high';
+
+function parseEuro(v) {
+  if (v === null || v === undefined || v === '') return 0;
+  const s = v.toString().replace(/[\u20ac\s]/g,'').replace(/\./g,'').replace(',','.').trim();
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+function dc(diff) {
+  if (diff === null) return '<span class="delta-zero">\u2014</span>';
+  if (diff < 0) return '<span class="delta-neg">\u25b2 '+fmtE(Math.abs(diff))+'</span>';
+  if (diff > 0) return '<span class="delta-pos">\u25bc '+fmtE(diff)+'</span>';
+  return '<span class="delta-zero">\u2014</span>';
+}
+function loadHistory()  { try { return JSON.parse(localStorage.getItem(STORE_KEY))  || []; } catch(e) { return []; } }
+function saveHistory(h) { try { localStorage.setItem(STORE_KEY, JSON.stringify(h)); } catch(e) {} }
+
+function loadArtikelen() { 
+  try { 
+    const data = localStorage.getItem(ARTIKEL_KEY);
+    return data ? JSON.parse(data) : null;
+  } catch(e) { 
+    return null; 
+  } 
+}
+
+function saveArtikelen(data) { 
+  try { 
+    localStorage.setItem(ARTIKEL_KEY, JSON.stringify(data)); 
+  } catch(e) {
+    console.error('Kon artikelen niet opslaan:', e);
+  } 
+}
+
+function handleArtikelUploadManager(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  const afdelingNr = document.getElementById('afdelingSelectie').value;
+  if (!afdelingNr) {
+    document.getElementById('uploadStatusManager').style.color = 'var(--danger)';
+    document.getElementById('uploadStatusManager').textContent = '✗ Kies eerst een afdeling';
+    return;
+  }
+  
+  const statusEl = document.getElementById('uploadStatusManager');
+  statusEl.style.display = 'block';
+  statusEl.style.color = 'var(--muted)';
+  statusEl.textContent = '⏳ Verwerken...';
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, {type: 'array'});
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(firstSheet, {header:1, defval:''});
+      
+      const artikelen = [];
+      let startRow = -1;
+      
+      for (let i = 0; i < Math.min(5, rows.length); i++) {
+        if (rows[i][0] && rows[i][0].toString().includes('Wgr')) {
+          startRow = i + 1;
+          break;
+        }
+      }
+      
+      if (startRow === -1) throw new Error('Kon header niet vinden');
+      
+      for (let i = startRow; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row[0] || !row[1]) continue;
+        
+        const artikelNr = row[1].toString().trim();
+        const fabrikant = (row[2] || '').toString().trim();
+        const omschrijving = (row[3] || '').toString().trim();
+        const vkPrijs = parseFloat(row[4] ? row[4].toString().replace(/[^0-9,.]/g, '').replace(',', '.') : 0);
+        
+        // Detecteer formaat op basis van totaal aantal kolommen
+        const totaalKolommen = row.length;
+        let waarde12plus = 0;
+        let aantal12plus = 0;
+        
+        if (totaalKolommen <= 28) {
+          // Nieuw formaat (27 kolommen): 10-12 is samengevoegd
+          // Waarde: kolom 20 (10-12) + 22 (13-24) + 24 (24+)
+          const waarde1012 = parseFloat(row[20] ? row[20].toString().replace(/[^0-9,.]/g, '').replace(',', '.') : 0);
+          const waarde1324 = parseFloat(row[22] ? row[22].toString().replace(/[^0-9,.]/g, '').replace(',', '.') : 0);
+          const waarde24plus = parseFloat(row[24] ? row[24].toString().replace(/[^0-9,.]/g, '').replace(',', '.') : 0);
+          waarde12plus = waarde1012 + waarde1324 + waarde24plus;
+          
+          // Aantal: kolom 19 (10-12) + 21 (13-24) + 23 (24+)
+          const aantal1012 = parseInt(row[19] || 0);
+          const aantal1324 = parseInt(row[21] || 0);
+          const aantal24plus = parseInt(row[23] || 0);
+          aantal12plus = aantal1012 + aantal1324 + aantal24plus;
+        } else {
+          // Oud formaat (31 kolommen): 10, 11, 12 apart
+          // Waarde: kolom 24 (12) + 26 (13-24) + 28 (24+)
+          const waarde12 = parseFloat(row[24] ? row[24].toString().replace(/[^0-9,.]/g, '').replace(',', '.') : 0);
+          const waarde1324 = parseFloat(row[26] ? row[26].toString().replace(/[^0-9,.]/g, '').replace(',', '.') : 0);
+          const waarde24plus = parseFloat(row[28] ? row[28].toString().replace(/[^0-9,.]/g, '').replace(',', '.') : 0);
+          waarde12plus = waarde12 + waarde1324 + waarde24plus;
+          
+          // Aantal: kolom 23 (12) + 25 (13-24) + 27 (24+)
+          const aantal12 = parseInt(row[23] || 0);
+          const aantal1324 = parseInt(row[25] || 0);
+          const aantal24plus = parseInt(row[27] || 0);
+          aantal12plus = aantal12 + aantal1324 + aantal24plus;
+        }
+        
+        if (waarde12plus > 0) {
+          artikelen.push({artikelNr, fabrikant, omschrijving, vkPrijs, waarde12plus, aantal: aantal12plus});
+        }
+      }
+      
+      artikelen.sort((a, b) => b.waarde12plus - a.waarde12plus);
+      
+      saveArtikelen({
+        afdelingNr: afdelingNr,
+        datum: new Date().toLocaleDateString('nl-NL'),
+        artikelen: artikelen
+      });
+      
+      statusEl.style.color = 'var(--success)';
+      statusEl.textContent = '✓ '+artikelen.length+' artikelen geladen';
+      
+      setTimeout(() => {
+        if (_history && _history.length > 0) {
+          renderDashboard(_history);
+        }
+      }, 500);
+      
+    } catch(err) {
+      statusEl.style.color = 'var(--danger)';
+      statusEl.textContent = '✗ Fout: ' + err.message;
+      console.error(err);
+    }
+  };
+  
+  reader.readAsArrayBuffer(file);
+}
+
+function verwijderArtikelData() {
+  if (confirm('Weet je zeker dat je de artikel data wilt verwijderen?')) {
+    localStorage.removeItem(ARTIKEL_KEY);
+    if (_history && _history.length > 0) {
+      renderDashboard(_history);
+    }
+  }
+}
+
+
+function loadDoelen()   { try { return JSON.parse(localStorage.getItem(DOEL_KEY))   || {}; } catch(e) { return {}; } }
+function saveDoelen(d)  { try { localStorage.setItem(DOEL_KEY,  JSON.stringify(d)); } catch(e) {} }
+function loadNotities() { try { return JSON.parse(localStorage.getItem(NOTIT_KEY))  || {}; } catch(e) { return {}; } }
+function saveNotities(n){ try { localStorage.setItem(NOTIT_KEY, JSON.stringify(n)); } catch(e) {} }
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('btnReset').addEventListener('click', () => {
+    if (!confirm('Alle opgeslagen data verwijderen?')) return;
+    [STORE_KEY, DOEL_KEY, NOTIT_KEY].forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
+    _history = null;
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('upload-screen').style.display = 'flex';
+    document.getElementById('topbarDate').textContent = '\u2014';
+    document.getElementById('historyHint').style.display = 'none';
+    document.getElementById('errorBar').style.display = 'none';
+    document.getElementById('alertBar').className = 'alert-bar';
+    document.getElementById('fileInput').value = '';
+    document.getElementById('fileInput2').value = '';
+  });
+  document.getElementById('btnNieuw').addEventListener('click', () => document.getElementById('fileInput2').click());
+  document.getElementById('fileInput2').addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+  document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+  });
+  const h = loadHistory();
+  if (h.length > 0) {
+    const hint = document.getElementById('historyHint');
+    hint.style.display = 'block';
+    hint.textContent = '\uD83D\uDCE6 ' + h.length + ' eerdere upload' + (h.length>1?'s':'') + ' opgeslagen';
+    const btn = document.getElementById('openDashboardBtn');
+    if (btn) btn.style.display = 'block';
+  }
+});
+
+const dropzone  = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const errorBar  = document.getElementById('errorBar');
+dropzone.addEventListener('dragover',  e => { e.preventDefault(); dropzone.classList.add('over'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('over'));
+dropzone.addEventListener('drop', e => { e.preventDefault(); dropzone.classList.remove('over'); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+
+function showError(msg) { errorBar.textContent = '\u2717  ' + msg; errorBar.style.display = 'block'; }
+
+function loadFile(file) {
+  errorBar.style.display = 'none';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb   = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header:1, raw:false, defval:'' });
+      processRows(rows);
+    } catch(err) { showError('Bestand kon niet worden gelezen: ' + err.message); }
+  };
+  reader.onerror = () => showError('Bestand kon niet worden geopend.');
+  reader.readAsArrayBuffer(file);
+}
+
+function processRows(rows) {
+  const raw   = (rows[1] && rows[1][0]) ? rows[1][0].toString() : '';
+  const match = raw.match(/Datum:\s*([\d]+-\w+-[\d]+)/);
+  const datum = match ? match[1] : new Date().toLocaleDateString('nl-NL');
+  const afdelingen = [];
+  for (let i = 3; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r[0] === '' || r[0] === null || r[0] === undefined) break;
+    const nr = r[0].toString().trim();
+    if (!nr || isNaN(Number(nr))) break;
+    const v = { m0:parseEuro(r[2]),m1:parseEuro(r[3]),m2:parseEuro(r[4]),m3:parseEuro(r[5]),
+                m46:parseEuro(r[6]),m79:parseEuro(r[7]),m10:parseEuro(r[8]),m11:parseEuro(r[9]),
+                m12:parseEuro(r[10]),m1324:parseEuro(r[11]),m24p:parseEuro(r[12]) };
+    const totaal = Object.values(v).reduce((s,x) => s+x, 0);
+    const oud3   = v.m3+v.m46+v.m79+v.m10+v.m11+v.m12+v.m1324+v.m24p;
+    const oud12  = v.m12+v.m1324+v.m24p;
+    afdelingen.push({ nr, naam:(r[1]||'').toString().trim(), v, totaal, oud3, oud12,
+      pct3:totaal>0?oud3/totaal:0, pct12:totaal>0?oud12/totaal:0 });
+  }
+  if (!afdelingen.length) { showError('Geen afdelingsdata gevonden.'); return; }
+  const history = loadHistory();
+  const snap = { datum, ts:Date.now(), afdelingen };
+  const di = history.findIndex(h => h.datum === datum);
+  if (di >= 0) history[di] = snap; else history.push(snap);
+  if (history.length > 60) history.splice(0, history.length - 60);
+  saveHistory(history);
+  renderDashboard(history);
+}
+
+let _history = null;
+
+function openBestaandDashboard() {
+  const history = loadHistory();
+  if (history.length > 0) {
+    renderDashboard(history);
+  }
+}
+
+function exportDoelOverzichtPDF(){if(!_history||_history.length<2)return;const curr=_history[_history.length-1];const eersteVanMaand=_history[0];const doelen=loadDoelen();const beginMap={};eersteVanMaand.afdelingen.forEach(a=>{beginMap[a.nr]=a;});const relevant=curr.afdelingen.filter(a=>a.oud12>0).sort((a,b)=>parseInt(a.nr)-parseInt(b.nr));let totBegin=0,totHuidig=0,totAfbouw=0,totDoel=0,opSchema=0,tekort=0,gestegen=0;const rows=relevant.map(a=>{const begin=beginMap[a.nr]?beginMap[a.nr].oud12:0;const huidig=a.oud12;const afbouw=begin-huidig;totBegin+=begin;totHuidig+=huidig;totAfbouw+=afbouw;const doel=doelen[a.nr];const doelWaarde=doel&&doel.nettoPerMaand?doel.nettoPerMaand:null;if(doelWaarde)totDoel+=doelWaarde;let status='—',rowBg='';if(doelWaarde){if(afbouw>=doelWaarde){status='<span style="color:#16a34a;font-weight:700">✓ Gehaald</span>';rowBg='#f0fdf4';opSchema++;}else if(afbouw<0){status='<span style="color:#dc2626;font-weight:700">✗ Gestegen</span>';rowBg='#fef2f2';gestegen++;}else{status='<span style="color:#f59e0b;font-weight:700">⚠ Tekort</span>';rowBg='#fffbeb';tekort++;}}const kleur=afbouw>0?'#16a34a':'#dc2626';return '<tr style="background:'+rowBg+'"><td style="padding:6px 10px;font-size:11px">'+a.nr+'</td><td style="padding:6px 10px;font-size:12px">'+a.naam+'</td><td style="padding:6px 10px;font-size:11px;text-align:right">'+fmtE(begin)+'</td><td style="padding:6px 10px;font-size:11px;text-align:right">'+fmtE(huidig)+'</td><td style="padding:6px 10px;font-size:11px;text-align:right;font-weight:600;color:'+kleur+'">'+fmtE(afbouw)+'</td><td style="padding:6px 10px;font-size:11px;text-align:right">'+(doelWaarde?fmtE(doelWaarde):'—')+'</td><td style="padding:6px 10px;font-size:12px;text-align:center">'+status+'</td></tr>';}).join('');const totVerschil=totAfbouw-totDoel;const totKleur=totAfbouw>0?'#16a34a':'#dc2626';const totRow='<tr style="background:#fffbeb;border-top:2px solid #d97706"><td colspan="2" style="padding:8px 10px;font-weight:700">Totaal</td><td style="padding:8px 10px;text-align:right;font-weight:700">'+fmtE(totBegin)+'</td><td style="padding:8px 10px;text-align:right;font-weight:700">'+fmtE(totHuidig)+'</td><td style="padding:8px 10px;text-align:right;font-weight:700;color:'+totKleur+'">'+fmtE(totAfbouw)+'</td><td style="padding:8px 10px;text-align:right;font-weight:700">'+fmtE(totDoel)+'</td><td style="padding:8px 10px;text-align:right;font-weight:700;color:'+(totVerschil>=0?'#16a34a':'#dc2626')+'">'+(totVerschil>=0?'+':'')+fmtE(totVerschil)+'</td></tr>';const pw=window.open('','_blank');pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Doelstellingen Overzicht</title><style>*{margin:0;padding:0}body{font-family:Calibri,Arial;padding:20px}@page{margin:15mm}.header{background:#0f2b5b;color:white;padding:18px;border-radius:8px;margin-bottom:16px}.header h1{font-size:18px}.header .sub{font-size:11px;opacity:.8}.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}.kpi-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px;text-align:center}.kpi-val{font-size:20px;font-weight:700}.kpi-val.ok{color:#16a34a}.kpi-val.warn{color:#f59e0b}.kpi-val.fail{color:#dc2626}table{width:100%;border-collapse:collapse;font-size:11px}th{background:#0f2b5b;color:white;padding:8px 10px;font-size:10px}th.r{text-align:right}td{border-bottom:1px solid #e2e8f0}.footer{margin-top:16px;font-size:10px;text-align:center;color:#94a3b8}</style></head><body><div class="header"><h1>📊 Doelstellingen Overzicht</h1><div class="sub">Maandprestatie: '+eersteVanMaand.datum+' → '+curr.datum+' · Vestiging 853</div></div><div class="kpi-row"><div class="kpi-box"><div style="font-size:10px;margin-bottom:6px">OP SCHEMA</div><div class="kpi-val ok">'+opSchema+'</div></div><div class="kpi-box"><div style="font-size:10px;margin-bottom:6px">TEKORT</div><div class="kpi-val warn">'+tekort+'</div></div><div class="kpi-box"><div style="font-size:10px;margin-bottom:6px">GESTEGEN</div><div class="kpi-val fail">'+gestegen+'</div></div></div><table><thead><tr><th>Nr</th><th>Afdeling</th><th class="r">Begin maand</th><th class="r">Huidig 12+</th><th class="r">Netto afbouw</th><th class="r">Doelstelling</th><th style="text-align:center">Status</th></tr></thead><tbody>'+rows+totRow+'</tbody></table><div class="footer">Gegenereerd: '+new Date().toLocaleString('nl-NL')+'</div></body></html>');pw.document.close();setTimeout(()=>pw.print(),250);}
+function renderDashboard(history) {
+  _history = history;
+  const curr = history[history.length - 1];
+  const prev = history.length >= 2 ? history[history.length - 2] : null;
+  const { datum, afdelingen } = curr;
+  const doelen = loadDoelen();
+
+  document.getElementById('upload-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('topbarDate').textContent = datum;
+  document.getElementById('historyCount').textContent = history.length + ' upload' + (history.length>1?'s':'') + ' opgeslagen';
+  document.getElementById('notitieUploadDatum').textContent = datum;
+
+  const totaal   = afdelingen.reduce((s,a)=>s+a.totaal,0);
+  const oud3tot  = afdelingen.reduce((s,a)=>s+a.oud3,0);
+  const oud12tot = afdelingen.reduce((s,a)=>s+a.oud12,0);
+  const prev3    = prev ? prev.afdelingen.reduce((s,a)=>s+a.oud3,0)  : null;
+  const prev12   = prev ? prev.afdelingen.reduce((s,a)=>s+a.oud12,0) : null;
+
+  const nowTs = curr.ts;
+  const week7 = history.filter(h => (nowTs-h.ts) <= 7*24*3600*1000);
+  let weekDelta3 = null;
+  if (week7.length >= 2) weekDelta3 = week7[0].afdelingen.reduce((s,a)=>s+a.oud3,0) - curr.afdelingen.reduce((s,a)=>s+a.oud3,0);
+
+  const afdMet12Plus = afdelingen.filter(a => a.oud12 > 0).length;
+
+  document.getElementById('kpiTotaal').textContent     = fmtE(totaal);
+  document.getElementById('kpiAfdelingen').textContent = afdelingen.length + ' afdelingen';
+  document.getElementById('kpi3m').textContent         = fmtE(oud3tot);
+  document.getElementById('kpi12m').textContent        = fmtE(oud12tot);
+  document.getElementById('kpiWeek').textContent       = weekDelta3 !== null ? fmtE(weekDelta3) : '\u2014';
+  document.getElementById('kpiWeekSub').textContent    = weekDelta3 !== null ? 'afgebouwd (7 dgn)' : 'Nog niet genoeg data';
+  document.getElementById('kpiDoel').textContent       = afdMet12Plus;
+  document.querySelector('#kpiDoel').closest('.kpi').querySelector('.kpi-sub').textContent = 'afdelingen met 12+ mnd';
+
+  function setDelta(id, cur, prv) {
+    const el = document.getElementById(id);
+    if (prv === null) { el.className='kpi-delta none'; el.textContent='Eerste upload'; return; }
+    const d = prv - cur;
+    if (d > 0)      { el.className='kpi-delta down'; el.textContent='\u25bc '+fmtE(d)+' t.o.v. vorige'; }
+    else if (d < 0) { el.className='kpi-delta up';   el.textContent='\u25b2 '+fmtE(Math.abs(d))+' t.o.v. vorige'; }
+    else            { el.className='kpi-delta none';  el.textContent='Geen wijziging'; }
+  }
+  setDelta('kpi3mDelta',  oud3tot,  prev3);
+  setDelta('kpi12mDelta', oud12tot, prev12);
+
+  renderBars('chart3m',  [...afdelingen].sort((a,b)=>b.oud3-a.oud3).slice(0,10),  a=>a.oud3,  a=>a.pct3,  false);
+  renderBars('chart12m', [...afdelingen].sort((a,b)=>b.oud12-a.oud12).slice(0,10), a=>a.oud12, a=>a.pct12, true);
+  renderTimeline('timeline3m',  history, h=>h.afdelingen.reduce((s,a)=>s+a.oud3,0));
+  renderTimeline('timeline12m', history, h=>h.afdelingen.reduce((s,a)=>s+a.oud12,0));
+    renderMaandProgressie();
+  renderMaandProgressiePerAfdeling();
+  // Bouw beginMap voor 3m maandkolom
+  const beginMap3m = {};
+  if (history.length >= 2) {
+    history[0].afdelingen.forEach(a => { if (a.oud3 > 0) beginMap3m[a.nr] = a.oud3; });
+  }
+  renderMainTable('table3m',  [...afdelingen].sort((a,b)=>b.oud3-a.oud3),  a=>a.oud3,  a=>a.pct3,  prev,'oud3', 't3-totaal','t3-oud','t3-pct','t3-delta',  totaal,oud3tot,prev3,  doelen, beginMap3m);
+  makeResizable('table3m');
+  // Bouw beginMap voor 12m maandkolom
+  const beginMap12m = {};
+  if (history.length >= 2) {
+    history[0].afdelingen.forEach(a => { if (a.oud12 > 0) beginMap12m[a.nr] = a.oud12; });
+  }
+  console.log('beginMap12m:', JSON.stringify(beginMap12m));
+  console.log('history[0] datum:', history[0]?.datum, 'history[-1] datum:', history[history.length-1]?.datum);
+  renderMainTable('table12m', [...afdelingen].filter(a=>a.oud12>0).sort((a,b)=>parseInt(a.nr)-parseInt(b.nr)), a=>a.oud12, a=>a.pct12, prev,'oud12','t12-totaal','t12-oud','t12-pct','t12-delta',totaal,oud12tot,prev12,doelen, beginMap12m);
+  makeResizable('table12m');
+  renderDetailTable(afdelingen);
+  renderDoelstellingenNieuw(afdelingen, doelen, datum, history);
+  renderManagerDashboard(afdelingen, doelen, history);
+  renderPerformers(history);
+  renderNotities(datum);
+  checkDrempels(afdelingen, doelen, history);
+}
+
+function renderBars(id, afds, valFn, pctFn, orange) {
+  const max = valFn(afds[0]) || 1;
+  document.getElementById(id).innerHTML = afds.filter(a=>valFn(a)>0).map((a,i) => {
+    const w = Math.max(3, valFn(a)/max*100).toFixed(1);
+    return '<div class="bar-row"><div class="bar-name">'+(i+1)+'. '+a.naam+'</div>'
+      +'<div class="bar-track"><div class="bar-fill '+(orange?'orange':'')+'" style="width:'+w+'%">'
+      +'<span class="bar-val">'+fmtE(valFn(a))+'</span></div></div>'
+      +'<div class="bar-pct">'+fmtP(pctFn(a))+'</div></div>';
+  }).join('');
+}
+
+function renderTimeline(id, history, valFn) {
+  if (history.length < 2) { document.getElementById(id).innerHTML = '<div class="no-data">Upload meerdere bestanden om trends te zien</div>'; return; }
+  const max  = Math.max(...history.map(valFn)) || 1;
+  const rows = [...history].reverse().slice(0,20);
+  document.getElementById(id).innerHTML = rows.map((h,i) => {
+    const val = valFn(h);
+    const prv = i < rows.length-1 ? valFn(rows[i+1]) : null;
+    const dif = prv !== null ? val - prv : 0;
+    const w   = Math.max(2, val/max*100).toFixed(1);
+    const ds  = prv !== null ? (dif<0?'<span class="delta-pos">\u25bc '+fmtE(Math.abs(dif))+'</span>':dif>0?'<span class="delta-neg">\u25b2 '+fmtE(dif)+'</span>':'<span class="delta-zero">=</span>') : '';
+    return '<div class="tl-row"><div class="tl-date">'+h.datum+'</div>'
+      +'<div class="tl-bar-wrap"><div class="tl-bar" style="width:'+w+'%"></div></div>'
+      +'<div class="tl-val">'+fmtE(val)+' '+ds+'</div></div>';
+  }).join('');
+}
+
+function renderAfbouwTable(curr, prev) {
+  const pm = {};
+  if (prev) prev.afdelingen.forEach(a => { pm[a.nr] = a; });
+  ['3','12'].forEach(tag => {
+    const key = 'oud'+tag;
+    const afds = [...curr.afdelingen].sort((a,b)=>b[key]-a[key]);
+    let sP=0,sC=0,sD=0,hp=false;
+    const rows = afds.map(a => {
+      const p=pm[a.nr]; const pv=p?p[key]:null; const dif=pv!==null?pv-a[key]:null;
+      if(pv!==null){sP+=pv;sC+=a[key];sD+=(pv-a[key]);hp=true;}else sC+=a[key];
+      const dCell=dif===null?'<span class="delta-zero">\u2014</span>':dif>0?'<span class="delta-pos">\u25bc '+fmtE(dif)+'</span>':dif<0?'<span class="delta-neg">\u25b2 '+fmtE(Math.abs(dif))+'</span>':'<span class="delta-zero">\u00b10</span>';
+      const ps=(pv&&pv>0&&dif!==null)?((dif/pv)*100).toFixed(1)+'%':'\u2014';
+      const cl=dif!==null&&dif>0?'delta-pos':dif<0?'delta-neg':'delta-zero';
+      return '<tr><td class="nr-col">'+a.nr+'</td><td class="name-col">'+a.naam+'</td><td data-v="'+(pv!==null?pv:'')+'">'+(pv!==null?fmtE(pv):'\u2014')+'</td><td data-v="'+a[key]+'">'+fmtE(a[key])+'</td><td data-v="'+(dif!==null?dif:'')+'">'+dCell+'</td><td data-v="'+(pv&&pv>0&&dif!==null?dif/pv:'')+'"><span class="'+cl+'">'+ps+'</span></td></tr>';
+    });
+    document.querySelector('#tableAfbouw'+tag+' tbody').innerHTML = rows.join('');
+    document.getElementById('af'+tag+'-prev').textContent = hp?fmtE(sP):'\u2014';
+    document.getElementById('af'+tag+'-curr').textContent = fmtE(sC);
+    document.getElementById('af'+tag+'-delta').innerHTML  = hp?dc(sD):'<span class="delta-zero">\u2014</span>';
+    const pt=hp&&sP>0?((sD/sP)*100).toFixed(1)+'%':'\u2014';
+    const cl=hp&&sD>0?'delta-pos':sD<0?'delta-neg':'delta-zero';
+    document.getElementById('af'+tag+'-pct').innerHTML = '<span class="'+cl+'">'+pt+'</span>';
+  });
+}
+
+
+function getMaandProgressie(history, oudKey) {
+  if (history.length < 2) return null;
+  
+  const curr = history[history.length - 1];
+  const eersteVanMaand = history[0]; // Gewoon oudste upload
+  
+  const beginTotaal = eersteVanMaand.afdelingen.reduce((sum, a) => sum + a[oudKey], 0);
+  const huidigTotaal = curr.afdelingen.reduce((sum, a) => sum + a[oudKey], 0);
+  const afgebouwd = beginTotaal - huidigTotaal;
+  
+  const beginDate = new Date(eersteVanMaand.ts);
+  const currDate = new Date(curr.ts);
+  const dagen = Math.max(1, Math.ceil((currDate - beginDate) / (1000 * 60 * 60 * 24)));
+  const gemiddeldPerDag = afgebouwd / dagen;
+  
+  return {
+    begin: beginTotaal,
+    huidig: huidigTotaal,
+    afgebouwd: afgebouwd,
+    dagen: dagen,
+    gemiddeld: gemiddeldPerDag,
+    beginDatum: eersteVanMaand.datum
+  };
+}
+
+function renderMaandProgressie() {
+  if (!_history || _history.length < 2) return;
+  
+  const prog3 = getMaandProgressie(_history, 'oud3');
+  const prog12 = getMaandProgressie(_history, 'oud12');
+  
+  // Render voor 3m
+  const el3 = document.getElementById('maandprog3');
+  if (el3 && prog3) {
+    const kleur = prog3.afgebouwd >= 0 ? '#16a34a' : '#dc2626';
+    el3.innerHTML = '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:16px"><div style="font-weight:600;margin-bottom:12px;color:#64748b">📊 Maand Progressie</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px"><div><div style="font-size:.75rem;color:#64748b;margin-bottom:4px">Begin maand</div><div style="font-size:1rem;font-weight:600">'+fmtE(prog3.begin)+'</div><div style="font-size:.7rem;color:#94a3b8">'+prog3.beginDatum+'</div></div><div><div style="font-size:.75rem;color:#64748b;margin-bottom:4px">Huidige stand</div><div style="font-size:1rem;font-weight:600">'+fmtE(prog3.huidig)+'</div></div><div><div style="font-size:.75rem;color:#64748b;margin-bottom:4px">Afgebouwd</div><div style="font-size:1.1rem;font-weight:700;color:'+kleur+'">'+fmtE(prog3.afgebouwd)+'</div></div><div><div style="font-size:.75rem;color:#64748b;margin-bottom:4px">Dagen actief</div><div style="font-size:1rem;font-weight:600">'+prog3.dagen+' dagen</div></div><div><div style="font-size:.75rem;color:#64748b;margin-bottom:4px">Ø Per dag</div><div style="font-size:1rem;font-weight:600;color:'+kleur+'">'+fmtE(prog3.gemiddeld)+'</div></div></div></div>';
+  }
+  
+  // Render voor 12m
+  const el12 = document.getElementById('maandprog12');
+  if (el12 && prog12) {
+    const kleur = prog12.afgebouwd >= 0 ? '#16a34a' : '#dc2626';
+    el12.innerHTML = '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:16px"><div style="font-weight:600;margin-bottom:12px;color:#64748b">📊 Maand Progressie</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px"><div><div style="font-size:.75rem;color:#64748b;margin-bottom:4px">Begin maand</div><div style="font-size:1rem;font-weight:600">'+fmtE(prog12.begin)+'</div><div style="font-size:.7rem;color:#94a3b8">'+prog12.beginDatum+'</div></div><div><div style="font-size:.75rem;color:#64748b;margin-bottom:4px">Huidige stand</div><div style="font-size:1rem;font-weight:600">'+fmtE(prog12.huidig)+'</div></div><div><div style="font-size:.75rem;color:#64748b;margin-bottom:4px">Afgebouwd</div><div style="font-size:1.1rem;font-weight:700;color:'+kleur+'">'+fmtE(prog12.afgebouwd)+'</div></div><div><div style="font-size:.75rem;color:#64748b;margin-bottom:4px">Dagen actief</div><div style="font-size:1rem;font-weight:600">'+prog12.dagen+' dagen</div></div><div><div style="font-size:.75rem;color:#64748b;margin-bottom:4px">Ø Per dag</div><div style="font-size:1rem;font-weight:600;color:'+kleur+'">'+fmtE(prog12.gemiddeld)+'</div></div></div></div>';
+  }
+}
+
+
+function renderMaandProgressiePerAfdeling() {
+  if (!_history || _history.length < 2) return;
+  
+  const curr = _history[_history.length - 1];
+  const eersteVanMaand = _history[0]; // Gewoon oudste upload
+  
+  // Bouw map van begin waarden
+  const beginMap = {};
+  eersteVanMaand.afdelingen.forEach(a => {
+    beginMap[a.nr] = a;
+  });
+  
+  // Render voor 3m
+  const afds3 = curr.afdelingen.filter(a => a.oud3 > 0 || (beginMap[a.nr] && beginMap[a.nr].oud3 > 0)).sort((a,b) => parseInt(a.nr) - parseInt(b.nr));
+  let html3 = '<div style="margin-top:8px"><div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px"><div style="font-weight:600;color:#64748b;margin-bottom:10px">📋 Per afdeling</div><div style="overflow-x:auto"><table style="width:100%;font-size:.85rem"><thead><tr style="border-bottom:2px solid #e2e8f0"><th style="padding:6px;text-align:left">Nr</th><th style="padding:6px;text-align:left">Afdeling</th><th style="padding:6px;text-align:right">Begin</th><th style="padding:6px;text-align:right">Nu</th><th style="padding:6px;text-align:right">Afgebouwd</th><th style="padding:6px;text-align:right">Ø/dag</th></tr></thead><tbody>';
+  
+  const beginDate = new Date(eersteVanMaand.ts);
+  const currDate = new Date(curr.ts);
+  const dagen = Math.max(1, Math.ceil((currDate - beginDate) / (1000 * 60 * 60 * 24)));
+  
+  afds3.forEach(a => {
+    const begin = beginMap[a.nr] ? beginMap[a.nr].oud3 : 0;
+    const nu = a.oud3;
+    const afgebouwd = begin - nu;
+    const perDag = afgebouwd / dagen;
+    const kleur = afgebouwd >= 0 ? '#16a34a' : '#dc2626';
+    
+    html3 += '<tr style="border-bottom:1px solid #e2e8f0"><td style="padding:6px">'+a.nr+'</td><td style="padding:6px">'+a.naam+'</td><td style="padding:6px;text-align:right">'+fmtE(begin)+'</td><td style="padding:6px;text-align:right">'+fmtE(nu)+'</td><td style="padding:6px;text-align:right;font-weight:600;color:'+kleur+'">'+fmtE(afgebouwd)+'</td><td style="padding:6px;text-align:right;color:'+kleur+'">'+fmtE(perDag)+'</td></tr>';
+  });
+  
+  html3 += '</tbody></table></div></div></div>';
+  
+  const el3 = document.getElementById('maandprog3');
+  if (el3) el3.innerHTML += html3;
+  
+  // Render voor 12m
+  const afds12 = curr.afdelingen.filter(a => a.oud12 > 0 || (beginMap[a.nr] && beginMap[a.nr].oud12 > 0)).sort((a,b) => parseInt(a.nr) - parseInt(b.nr));
+  let html12 = '<div style="margin-top:8px"><details style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px"><summary style="cursor:pointer;font-weight:600;color:#64748b">📋 Per afdeling (klik om te tonen)</summary><div style="margin-top:12px;overflow-x:auto"><table style="width:100%;font-size:.85rem"><thead><tr style="border-bottom:2px solid #e2e8f0"><th style="padding:6px;text-align:left">Nr</th><th style="padding:6px;text-align:left">Afdeling</th><th style="padding:6px;text-align:right">Begin</th><th style="padding:6px;text-align:right">Nu</th><th style="padding:6px;text-align:right">Afgebouwd</th><th style="padding:6px;text-align:right">Ø/dag</th></tr></thead><tbody>';
+  
+  afds12.forEach(a => {
+    const begin = beginMap[a.nr] ? beginMap[a.nr].oud12 : 0;
+    const nu = a.oud12;
+    const afgebouwd = begin - nu;
+    const perDag = afgebouwd / dagen;
+    const kleur = afgebouwd >= 0 ? '#16a34a' : '#dc2626';
+    
+    html12 += '<tr style="border-bottom:1px solid #e2e8f0"><td style="padding:6px">'+a.nr+'</td><td style="padding:6px">'+a.naam+'</td><td style="padding:6px;text-align:right">'+fmtE(begin)+'</td><td style="padding:6px;text-align:right">'+fmtE(nu)+'</td><td style="padding:6px;text-align:right;font-weight:600;color:'+kleur+'">'+fmtE(afgebouwd)+'</td><td style="padding:6px;text-align:right;color:'+kleur+'">'+fmtE(perDag)+'</td></tr>';
+  });
+  
+  html12 += '</tbody></table></div></details></div>';
+  
+  const el12 = document.getElementById('maandprog12');
+  if (el12) el12.innerHTML += html12;
+}
+
+function renderMainTable(tableId, afds, oudFn, pctFn, prev, oudKey, tTot, tOud, tPct, tDelta, totaal, oudTot, prevOudTot, doelen, beginMap) {
+  const pm = {};
+  if (prev) prev.afdelingen.forEach(a => { pm[a.nr] = a; });
+  const is3m  = tableId === 'table3m';
+  const is12m = tableId === 'table12m';
+  let maandTot = 0;
+  let gisterTot = null;
+
+  document.querySelector('#'+tableId+' tbody').innerHTML = afds.map(a => {
+    const p   = pm[a.nr];
+    const dif = p ? p[oudKey] - oudFn(a) : null;
+    if (dif !== null) gisterTot = (gisterTot || 0) + dif;
+
+    // Maandafbouw
+    let maandAfbouw = null;
+    let maandCell = '';
+    if (beginMap && beginMap[a.nr] !== undefined) {
+      maandAfbouw = beginMap[a.nr] - oudFn(a);
+      maandTot += maandAfbouw;
+      maandCell = '<td data-v="'+maandAfbouw+'">'+dc(maandAfbouw)+'</td>';
+    } else {
+      maandCell = '<td><span class="delta-zero">—</span></td>';
+    }
+
+    // Doelstelling (alleen 12m)
+    let doelCell = '';
+    if (is12m) {
+      const doel = doelen[a.nr];
+      let doelHtml = '<span class="delta-zero">—</span>';
+      if (doel && doel.nettoPerMaand) {
+        const target = doel.nettoPerMaand;
+        if (maandAfbouw === null) {
+          doelHtml = '<span class="doel-wrap warn"><span class="doel-badge warn">— Geen data</span><span class="doel-bedrag">/ '+fmtE(target)+'</span></span>';
+        } else if (maandAfbouw >= target) {
+          doelHtml = '<span class="doel-wrap ok"><span class="doel-badge ok">✓ Gehaald</span><span class="doel-bedrag">'+fmtE(maandAfbouw)+' / '+fmtE(target)+'</span></span>';
+        } else if (maandAfbouw < 0) {
+          doelHtml = '<span class="doel-wrap fail"><span class="doel-badge fail">↑ Gestegen</span><span class="doel-bedrag">/ '+fmtE(target)+'</span></span>';
+        } else if (maandAfbouw === 0) {
+          doelHtml = '<span class="doel-wrap warn"><span class="doel-badge warn">— Geen afbouw</span><span class="doel-bedrag">/ '+fmtE(target)+'</span></span>';
+        } else {
+          doelHtml = '<span class="doel-wrap warn"><span class="doel-badge warn">⚠ Tekort</span><span class="doel-bedrag">€'+fmt(target-maandAfbouw)+' tekort / '+fmtE(target)+'</span></span>';
+        }
+      }
+      doelCell = '<td class="doel-cel">'+doelHtml+'</td>';
+    }
+
+    return '<tr>'
+      +'<td class="nr-col">'+a.nr+'</td>'
+      +'<td class="name-col">'+a.naam+'</td>'
+      +'<td data-v="'+a.totaal+'">'+fmtE(a.totaal)+'</td>'
+      +'<td data-v="'+oudFn(a)+'" style="font-weight:600">'+fmtE(oudFn(a))+'</td>'
+      +'<td data-v="'+pctFn(a)+'"><span class="pill '+(is12m?pill12(pctFn(a)):pill(pctFn(a)))+'">'+fmtP(pctFn(a))+'</span></td>'
+      +'<td data-v="'+(dif!==null?dif:'')+'">'+dc(dif)+'</td>'
+      +maandCell
+      +doelCell
+      +'</tr>';
+  }).join('');
+
+  document.getElementById(tTot).textContent = fmtE(totaal);
+  document.getElementById(tOud).textContent = fmtE(oudTot);
+  const pillFn = is12m ? pill12 : pill;
+  document.getElementById(tPct).innerHTML   = '<span class="pill '+pillFn(oudTot/totaal)+'">'+fmtP(oudTot/totaal)+'</span>';
+  const elDelta = document.getElementById(tDelta);
+  if (elDelta) elDelta.innerHTML = dc(gisterTot);
+  if (is3m  && document.getElementById('t3-maand'))  document.getElementById('t3-maand').innerHTML  = dc(maandTot);
+  if (is12m && document.getElementById('t12-maand')) document.getElementById('t12-maand').innerHTML = dc(maandTot);
+  if (is12m && document.getElementById('t12-doel')) {
+    // Bereken totaal doelstelling en totaal tekort
+    let totDoel = 0, totAfbouwDoel = 0;
+    afds.forEach(a => {
+      const d = doelen[a.nr];
+      if (d && d.nettoPerMaand) {
+        totDoel += d.nettoPerMaand;
+        const bm = beginMap && beginMap[a.nr] !== undefined ? beginMap[a.nr] - oudFn(a) : 0;
+        totAfbouwDoel += bm;
+      }
+    });
+    const verschil = totAfbouwDoel - totDoel;
+    const vKleur = verschil >= 0 ? 'var(--success)' : 'var(--danger)';
+    const vTekst = verschil >= 0 ? '✓ '+fmtE(verschil)+' voor op doel' : '⚠ '+fmtE(Math.abs(verschil))+' tekort op doel';
+    document.getElementById('t12-doel').innerHTML = '<span style="color:'+vKleur+';font-weight:600;font-size:.8rem">'+vTekst+'</span>';
+  }
+}
+
+// ── Sorteren ──────────────────────────────────────────────
+const _sortState = {};
+function sortTable(tableId, colIdx, type) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  const tbody = table.querySelector('tbody');
+  const rows  = Array.from(tbody.querySelectorAll('tr'));
+  const key   = tableId + '_' + colIdx;
+  const dir   = (_sortState[key] || 'desc') === 'desc' ? 'asc' : 'desc';
+  _sortState[key] = dir;
+  table.querySelectorAll('th.sortable').forEach(th => th.className = 'sortable');
+  const ths = table.querySelectorAll('th');
+  if (ths[colIdx]) ths[colIdx].className = 'sortable ' + dir;
+  rows.sort((a, b) => {
+    const tdA = a.querySelectorAll('td')[colIdx];
+    const tdB = b.querySelectorAll('td')[colIdx];
+    if (!tdA || !tdB) return 0;
+    const raw = el => el.dataset.v !== undefined && el.dataset.v !== '' ? el.dataset.v : el.textContent.trim();
+    const vA  = raw(tdA), vB = raw(tdB);
+    let cmp;
+    if (type === 'num') {
+      const nA = parseFloat(String(vA).replace(/[^\d.\-]/g,''));
+      const nB = parseFloat(String(vB).replace(/[^\d.\-]/g,''));
+      cmp = (isNaN(nA) ? -Infinity : nA) - (isNaN(nB) ? -Infinity : nB);
+    } else {
+      cmp = vA.localeCompare(vB, 'nl');
+    }
+    return dir === 'asc' ? cmp : -cmp;
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+
+function renderDetailTable(afds) {
+  const keys = ['m0','m1','m2','m3','m46','m79','m10','m11','m12','m1324','m24p'];
+  document.querySelector('#tableDetail tbody').innerHTML = afds.map(a =>
+    '<tr><td class="nr-col">'+a.nr+'</td><td class="name-col">'+a.naam+'</td>'
+    +keys.map(k=>'<td>'+fmtE(a.v[k])+'</td>').join('')
+    +'<td><strong>'+fmtE(a.totaal)+'</strong></td></tr>').join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// NIEUWE DOELSTELLINGEN MODULE
+// ══════════════════════════════════════════════════════════
+
+const EINDDOEL_DATUM = new Date('2026-09-01'); // September 2026 = €0
+
+// ── Doelstellingen: Netto afbouw per maand ───────────────
+
+// Helper: Bepaal of twee datums in dezelfde maand vallen
+function zelfdeManad(datum1, datum2) {
+  const d1 = new Date(datum1);
+  const d2 = new Date(datum2);
+  return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth();
+}
+
+// Vind eerste upload van huidige maand
+function vindEersteUploadVanMaand(history, huidigeDatum) {
+  for (let i = history.length - 1; i >= 0; i--) {
+    const upload = history[i];
+    if (zelfdeManad(upload.datum, huidigeDatum)) {
+      continue; // Nog steeds in huidige maand
+    } else {
+      // Dit is de laatste upload van vorige maand
+      // Dus de volgende (i+1) is de eerste van huidige maand
+      return i + 1 < history.length ? i + 1 : null;
+    }
+  }
+  // Als we hier komen, zijn alle uploads in dezelfde maand
+  return 0;
+}
+
+
+function resetMaandTracking() {
+  if (!confirm('Maand tracking resetten? De laatste upload wordt als "begin van de maand" gemarkeerd en alle vorige uploads worden genegeerd voor afbouw berekeningen.')) return;
+  
+  if (!_history || _history.length < 1) return;
+  
+  // Markeer de laatste upload als "maand start"
+  const laatste = _history[_history.length - 1];
+  laatste.maandStart = true;
+  
+  saveHistory(_history);
+  renderDashboard(_history);
+  alert('✓ Maand tracking gereset. Afbouw wordt nu berekend vanaf ' + laatste.datum);
+}
+
+
+function isNa2eVanMaand(datum) {
+  const d = new Date(datum);
+  return d.getDate() >= 2;
+}
+
+function heeftMaandVerschuivingGehad(huidigeDatum, vorigeDatum) {
+  const huidig = new Date(huidigeDatum);
+  const vorige = new Date(vorigeDatum);
+  
+  // Verschillende maanden = altijd reset
+  if (huidig.getMonth() !== vorige.getMonth() || huidig.getFullYear() !== vorige.getFullYear()) {
+    return true;
+  }
+  
+  // Zelfde maand: alleen reset als vorige = dag 1 EN huidige >= dag 3
+  const vorigeDag = vorige.getDate();
+  const huidigDag = huidig.getDate();
+  
+  return vorigeDag === 1 && huidigDag >= 3;
+}
+
+function berekenNettoAfbouw(curr, prev, nr) {
+  if (!prev) return null;
+  
+  // Check of current upload een maandStart flag heeft
+  if (curr.maandStart) return null;
+  
+  // Check of prev upload een maandStart flag heeft
+  if (prev.maandStart) return null;
+  
+  // Check of er maandverschuiving heeft plaatsgevonden (2e gepasseerd)
+  if (heeftMaandVerschuivingGehad(curr.datum, prev.datum)) {
+    return null;
+  }
+  
+  const currAfd = curr.afdelingen.find(a => a.nr === nr);
+  const prevAfd = prev.afdelingen.find(a => a.nr === nr);
+  if (!currAfd || !prevAfd) return null;
+  return prevAfd.oud12 - currAfd.oud12;
+}
+
+function berekenGemiddeldeAfbouw(history, nr, aantalMaanden = 3) {
+  if (history.length < 2) return null;
+  const recente = history.slice(-Math.min(aantalMaanden + 1, history.length));
+  if (recente.length < 2) return null;
+  
+  let totaalAfbouw = 0;
+  let aantalMetingen = 0;
+  
+  for (let i = recente.length - 1; i >= 1; i--) {
+    const afbouw = berekenNettoAfbouw(recente[i], recente[i-1], nr);
+    if (afbouw !== null) {
+      totaalAfbouw += afbouw;
+      aantalMetingen++;
+    }
+  }
+  
+  return aantalMetingen > 0 ? totaalAfbouw / aantalMetingen : null;
+}
+
+// ── Render nieuwe doelen tab ──────────────────────────────
+function renderDoelstellingenNieuw(afdelingen, doelen, datum, history) {
+  const huidigeMaand = new Date(datum);
+  const maandenTotEind = (EINDDOEL_DATUM.getFullYear() - huidigeMaand.getFullYear()) * 12
+                       + (EINDDOEL_DATUM.getMonth() - huidigeMaand.getMonth());
+
+  const eersteVanMaand = history.length >= 2 ? history[0] : null;
+  const beginMap = {};
+  if (eersteVanMaand) eersteVanMaand.afdelingen.forEach(a => { if (a.oud12 > 0) beginMap[a.nr] = a.oud12; });
+
+  const relevant = afdelingen.filter(a => a.oud12 > 0).sort((a,b) => parseInt(a.nr) - parseInt(b.nr));
+
+  let html = '<div class="doel-header">';
+  html += '<div class="doel-info">';
+  html += '<div style="font-size:.9rem;font-weight:600;margin-bottom:4px">🎯 Doelstelling: Netto afbouw 12+ maanden per maand</div>';
+  html += '<div style="font-size:.8rem;color:var(--muted)">Nog ' + maandenTotEind + ' maanden tot september 2026 · Stel per afdeling minimale netto afbouw/maand in</div>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  html += '<button class="btn ghost2" onclick="autoDoelen()" style="font-size:.82rem;padding:7px 14px">⚡ Auto-bereken</button>';
+  html += '<button class="btn ghost2" onclick="exportDoelenPDF()" style="font-size:.82rem;padding:7px 14px">📄 PDF</button>';
+  html += '<button class="btn primary" onclick="slaDoelstellingenOp()" style="font-size:.82rem;padding:7px 14px">💾 Opslaan</button>';
+  html += '</div></div>';
+
+  html += '<div class="table-wrap"><table id="tableDoelen">';
+  html += '<thead><tr>'
+    + '<th style="text-align:left">Nr</th>'
+    + '<th style="text-align:left">Afdeling</th>'
+    + '<th style="text-align:right">Huidige 12+</th>'
+    + '<th style="text-align:center">% Oudheid</th>'
+    + '<th style="text-align:right">Afgebouwd deze maand</th>'
+    + '<th style="text-align:right">Doelstelling / mnd</th>'
+    + '<th style="text-align:left">Status</th>'
+    + '</tr></thead><tbody>';
+
+  let totOud12 = 0, totMaand = 0, totDoel = 0;
+
+  relevant.forEach(a => {
+    const doel = doelen[a.nr];
+    const doelWaarde = doel && doel.nettoPerMaand ? doel.nettoPerMaand : '';
+    const autoSuggestie = Math.round(a.oud12 / Math.max(1, maandenTotEind));
+    const pct = a.totaal > 0 ? a.oud12 / a.totaal : 0;
+
+    const maandAfbouw = beginMap[a.nr] !== undefined ? beginMap[a.nr] - a.oud12 : null;
+    if (maandAfbouw !== null) totMaand += maandAfbouw;
+    totOud12 += a.oud12;
+    if (doelWaarde) totDoel += parseFloat(doelWaarde);
+
+    let statusHtml = '<span class="status na">—</span>';
+    if (doelWaarde && maandAfbouw !== null) {
+      const dv = parseFloat(doelWaarde);
+      if (maandAfbouw >= dv) {
+        statusHtml = '<span class="status ok">✓ Gehaald</span>';
+      } else if (maandAfbouw < 0) {
+        statusHtml = '<span class="status fail">↑ Gestegen</span>';
+      } else if (maandAfbouw === 0) {
+        statusHtml = '<span class="status warn">— Geen afbouw</span>';
+      } else {
+        statusHtml = '<span class="status warn">⚠ €' + fmt(dv - maandAfbouw) + ' tekort</span>';
+      }
+    }
+
+    const maandCell = maandAfbouw !== null ? dc(maandAfbouw) : '<span class="delta-zero">—</span>';
+    const pillCls = pct <= 0 ? 'na' : pct <= 0.01 ? 'mid' : 'high';
+
+    html += '<tr>'
+      + '<td class="nr-col">' + a.nr + '</td>'
+      + '<td class="name-col">' + a.naam + '</td>'
+      + '<td style="text-align:right;font-weight:600">' + fmtE(a.oud12) + '</td>'
+      + '<td style="text-align:center"><span class="pill ' + pillCls + '">' + fmtP(pct) + '</span></td>'
+      + '<td style="text-align:right">' + maandCell + '</td>'
+      + '<td style="text-align:right"><div style="display:flex;align-items:center;justify-content:flex-end;gap:6px">'
+      + '<span style="font-size:.8rem;color:var(--muted)">€</span>'
+      + '<input type="number" min="0" step="100" placeholder="' + fmt(autoSuggestie) + '" value="' + doelWaarde + '" id="doel_' + a.nr + '" '
+      + 'style="width:110px;padding:4px 8px;border:1px solid var(--border);border-radius:5px;font-family:var(--mono);font-size:.85rem;text-align:right;background:var(--surface2)">'
+      + '</div></td>'
+      + '<td>' + statusHtml + '</td>'
+      + '</tr>';
+  });
+
+  const totVerschil = totMaand - totDoel;
+  const totVerschilHtml = totDoel > 0
+    ? '<span style="color:' + (totVerschil >= 0 ? 'var(--success)' : 'var(--danger)') + ';font-weight:600">'
+      + (totVerschil >= 0 ? '✓ ' + fmtE(totVerschil) + ' voor op doel' : '⚠ ' + fmtE(Math.abs(totVerschil)) + ' tekort op doel')
+      + '</span>'
+    : '—';
+
+  html += '<tr style="background:var(--surface2);font-weight:600;border-top:2px solid var(--border)">'
+    + '<td></td><td>Totaal</td>'
+    + '<td style="text-align:right">' + fmtE(totOud12) + '</td>'
+    + '<td></td>'
+    + '<td style="text-align:right">' + dc(totMaand) + '</td>'
+    + '<td style="text-align:right;font-family:var(--mono)">' + (totDoel > 0 ? fmtE(totDoel) : '—') + '</td>'
+    + '<td>' + totVerschilHtml + '</td>'
+    + '</tr>';
+
+  html += '</tbody></table></div>';
+  document.getElementById('doelContent').innerHTML = html;
+}
+
+function autoDoelen() {
+  if (!_history) return;
+  const datum = _history[_history.length-1].datum;
+  const huidigeMaand = new Date(datum);
+  const maandenTotEind = (EINDDOEL_DATUM.getFullYear() - huidigeMaand.getFullYear()) * 12 
+                       + (EINDDOEL_DATUM.getMonth() - huidigeMaand.getMonth());
+  
+  _history[_history.length-1].afdelingen.forEach(a => {
+    if (a.oud12 === 0) return;
+    const el = document.getElementById('doel_'+a.nr);
+    if (!el) return;
+    const suggestie = Math.round(a.oud12 / Math.max(1, maandenTotEind));
+    el.value = suggestie;
+  });
+}
+
+function slaDoelstellingenOp() {
+  if (!_history) return;
+  const afds = _history[_history.length-1].afdelingen;
+  const doelen = loadDoelen();
+  
+  afds.forEach(a => {
+    const el = document.getElementById('doel_'+a.nr);
+    if (!el) return;
+    const v = el.value.trim();
+    
+    if (v === '') {
+      delete doelen[a.nr];
+    } else {
+      const nettoPerMaand = parseFloat(v);
+      if (!doelen[a.nr]) doelen[a.nr] = {};
+      doelen[a.nr].nettoPerMaand = nettoPerMaand;
+    }
+  });
+  
+  saveDoelen(doelen);
+  renderDashboard(_history);
+  alert('✓ Doelstellingen opgeslagen!');
+}
+
+// ── Export Doelstellingen naar Excel ─────────────────────
+function exportDoelenExcel() {
+  if (!_history || _history.length < 2) {
+    alert('Je hebt minimaal 2 uploads nodig om netto afbouw te berekenen');
+    return;
+  }
+  
+  const curr = _history[_history.length - 1];
+  const prev = _history[_history.length - 2];
+  const datum = curr.datum;
+  const doelen = loadDoelen();
+  
+  const relevant = curr.afdelingen.filter(a => a.oud12 > 0).sort((a,b) => parseInt(a.nr) - parseInt(b.nr));
+  
+  const data = [
+    ['Doelstellingen Netto Afbouw 12+ Maanden'],
+    ['Peildatum: ' + datum + '  ·  Vergeleken met: ' + prev.datum],
+    [],
+    ['Nr', 'Afdeling', 'Huidige 12+', 'Vorige maand', 'Netto afbouw', 'Doelstelling/mnd', 'Status']
+  ];
+  
+  relevant.forEach(a => {
+    const nettoAfbouw = berekenNettoAfbouw(curr, prev, a.nr);
+    const gemiddelde = berekenGemiddeldeAfbouw(_history, a.nr, 3);
+    const doel = doelen[a.nr];
+    const doelWaarde = doel && doel.nettoPerMaand ? doel.nettoPerMaand : '';
+    
+    let status = '—';
+    if (doelWaarde && nettoAfbouw !== null) {
+      const dv = parseFloat(doelWaarde);
+      if (nettoAfbouw >= dv) status = '✓ Gehaald';
+      else if (nettoAfbouw < 0) status = '✗ Gestegen ' + fmtE(Math.abs(nettoAfbouw));
+      else status = '⚠ €' + fmt(dv - nettoAfbouw) + ' tekort';
+    }
+    
+    const prevAfd = prev.afdelingen.find(p => p.nr === a.nr);
+    
+    data.push([
+      a.nr,
+      a.naam,
+      a.oud12,
+      prevAfd ? prevAfd.oud12 : '',
+      nettoAfbouw !== null ? nettoAfbouw : '',
+      doelWaarde || '',
+      status
+    ]);
+  });
+  
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  
+  ws['!cols'] = [{wch:5},{wch:28},{wch:14},{wch:14},{wch:14},{wch:16},{wch:18}];
+  ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:7}},{s:{r:1,c:0},e:{r:1,c:7}}];
+  
+  // Formattering
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let R = 4; R <= range.e.r; R++) {
+    for (let C = 2; C <= 5; C++) {
+      const addr = XLSX.utils.encode_cell({r:R, c:C});
+      if (!ws[addr] || typeof ws[addr].v !== 'number') continue;
+      ws[addr].z = '€#,##0.00';
+    }
+  }
+  
+  XLSX.utils.book_append_sheet(wb, ws, 'Doelstellingen');
+  XLSX.writeFile(wb, 'Doelstellingen_NettoAfbouw_' + datum.replace(/[\s:]/g,'_') + '.xlsx');
+}
+
+// ── Export Doelstellingen naar PDF ───────────────────────
+function exportDoelenPDF() {
+  if (!_history || _history.length < 2) {
+    alert('Je hebt minimaal 2 uploads nodig');
+    return;
+  }
+  
+  const curr = _history[_history.length - 1];
+  const prev = _history[_history.length - 2];
+  const datum = curr.datum;
+  const doelen = loadDoelen();
+  
+  const relevant = curr.afdelingen.filter(a => a.oud12 > 0).sort((a,b) => parseInt(a.nr) - parseInt(b.nr));
+  
+  let opSchema = 0, tekort = 0, gestegen = 0;
+  let totHuidig = 0, totAfbouw = 0, totDoel = 0;
+  
+  const rows = relevant.map(a => {
+    const nettoAfbouw = berekenNettoAfbouw(curr, prev, a.nr);
+    const doel = doelen[a.nr];
+    const doelWaarde = doel && doel.nettoPerMaand ? doel.nettoPerMaand : null;
+    
+    totHuidig += a.oud12;
+    if (nettoAfbouw !== null) totAfbouw += nettoAfbouw;
+    if (doelWaarde) totDoel += doelWaarde;
+    
+    let statusHtml = '<span style="color:#94a3b8">—</span>';
+    let rowBg = '';
+    
+    if (doelWaarde && nettoAfbouw !== null) {
+      if (nettoAfbouw >= doelWaarde) {
+        statusHtml = '<span style="color:#16a34a;font-weight:700">✓ Gehaald</span>';
+        rowBg = '#f0fdf4';
+        opSchema++;
+      } else if (nettoAfbouw < 0) {
+        statusHtml = '<span style="color:#dc2626;font-weight:700">✗ Gestegen</span>';
+        rowBg = '#fef2f2';
+        gestegen++;
+      } else {
+        statusHtml = '<span style="color:#f59e0b;font-weight:700">⚠ Tekort</span>';
+        rowBg = '#fffbeb';
+        tekort++;
+      }
+    }
+    
+    return '<tr style="background:'+rowBg+'"><td style="padding:6px 10px;font-size:11px">'+a.nr+'</td><td style="padding:6px 10px;font-size:12px">'+a.naam+'</td><td style="padding:6px 10px;font-size:11px;text-align:right">'+fmtE(a.oud12)+'</td><td style="padding:6px 10px;font-size:11px;text-align:right;font-weight:600;color:'+(nettoAfbouw!==null&&nettoAfbouw>=0?'#16a34a':'#dc2626')+'">'+(nettoAfbouw!==null?fmtE(nettoAfbouw):'—')+'</td><td style="padding:6px 10px;font-size:11px;text-align:right">'+(doelWaarde?fmtE(doelWaarde):'—')+'</td><td style="padding:6px 10px;font-size:12px;text-align:center">'+statusHtml+'</td></tr>';
+  }).join('');
+  
+  const totaalRow = '<tr style="background:#fffbeb;border-top:2px solid #d97706"><td colspan="2" style="padding:8px 10px;font-weight:700">Totaal</td><td style="padding:8px 10px;font-size:12px;text-align:right;font-weight:700">'+fmtE(totHuidig)+'</td><td style="padding:8px 10px;font-size:12px;text-align:right;font-weight:700;color:'+(totAfbouw>0?'#16a34a':'#dc2626')+'">'+fmtE(totAfbouw)+'</td><td style="padding:8px 10px;font-size:12px;text-align:right;font-weight:700">'+fmtE(totDoel)+'</td><td></td></tr>';
+  
+  const pw = window.open('','_blank','width=1200,height=900');
+  pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Doelstellingen '+datum+'</title><style>*{margin:0;padding:0}body{font-family:Calibri,Arial;padding:20px}@page{margin:15mm}.header{background:#0f2b5b;color:white;padding:18px;border-radius:8px;margin-bottom:16px}.header h1{font-size:18px}.header .sub{font-size:11px;opacity:.8}.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}.kpi-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px;text-align:center}.kpi-val{font-size:20px;font-weight:700}.kpi-val.ok{color:#16a34a}.kpi-val.warn{color:#f59e0b}.kpi-val.fail{color:#dc2626}table{width:100%;border-collapse:collapse;font-size:11px}th{background:#0f2b5b;color:white;padding:8px 10px;font-size:10px}th.r{text-align:right}td{border-bottom:1px solid #e2e8f0}.footer{margin-top:16px;font-size:10px;text-align:center}.print-btn{position:fixed;bottom:20px;right:20px;background:#2563eb;color:white;border:none;padding:12px 24px;border-radius:8px;cursor:pointer}@media print{.print-btn{display:none}}</style></head><body><div class="header"><h1>📊 Doelstellingen Rapport</h1><div class="sub">'+datum+' · Vestiging 853</div></div><div class="kpi-row"><div class="kpi-box"><div style="font-size:10px;margin-bottom:6px">OP SCHEMA</div><div class="kpi-val ok">'+opSchema+'</div></div><div class="kpi-box"><div style="font-size:10px;margin-bottom:6px">TEKORT</div><div class="kpi-val warn">'+tekort+'</div></div><div class="kpi-box"><div style="font-size:10px;margin-bottom:6px">GESTEGEN</div><div class="kpi-val fail">'+gestegen+'</div></div></div><table><thead><tr><th>Nr</th><th>Afdeling</th><th class="r">Huidig 12+</th><th class="r">Netto afbouw</th><th class="r">Doelstelling</th><th style="text-align:center">Status</th></tr></thead><tbody>'+rows+totaalRow+'</tbody></table><div class="footer">Gegenereerd: '+new Date().toLocaleString('nl-NL')+'</div><button class="print-btn" onclick="window.print()">🖨 Afdrukken</button></body></html>');
+  pw.document.close();
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// MANAGER DASHBOARD MODULE
+// ═══════════════════════════════════════════════════════════
+
+// ── Trend Voorspelling ────────────────────────────────────
+function berekenTrendVoorspelling(history, afdNr) {
+  if (history.length < 3) return null; // Te weinig data
+  
+  // Bereken gemiddelde afbouw per upload (laatste 3)
+  const recent = history.slice(-3);
+  let totaalAfbouw = 0;
+  let aantalMetingen = 0;
+  
+  for (let i = 1; i < recent.length; i++) {
+    const curr = recent[i].afdelingen.find(a => a.nr === afdNr);
+    const prev = recent[i-1].afdelingen.find(a => a.nr === afdNr);
+    if (curr && prev && prev.oud12 > 0) {
+      totaalAfbouw += (prev.oud12 - curr.oud12);
+      aantalMetingen++;
+    }
+  }
+  
+  if (aantalMetingen === 0) return null;
+  
+  const gemAfbouwPerUpload = totaalAfbouw / aantalMetingen;
+  const huidig = recent[recent.length-1].afdelingen.find(a => a.nr === afdNr);
+  if (!huidig || huidig.oud12 === 0) return { status: 'done', msg: 'Al op €0' };
+  
+  // Bereken hoeveel uploads nog nodig
+  const uploadsNodig = gemAfbouwPerUpload > 0 ? Math.ceil(huidig.oud12 / gemAfbouwPerUpload) : 999;
+  
+  // Check of dit op tijd is voor september
+  const now = new Date(history[history.length-1].ts);
+  const sept = new Date('2026-09-01');
+  const dagenOver = Math.floor((sept - now) / (1000*60*60*24));
+  const weken = Math.floor(dagenOver / 7);
+  
+  // Aanname: 1 upload per week
+  if (uploadsNodig <= weken) {
+    return { status: 'op_schema', uploadsNodig, weken, gemAfbouw: gemAfbouwPerUpload };
+  } else {
+    const tekort = uploadsNodig - weken;
+    return { status: 'te_traag', uploadsNodig, weken, tekort, gemAfbouw: gemAfbouwPerUpload };
+  }
+}
+
+// ── Alerts Genereren ──────────────────────────────────────
+function genereerAlerts(afdelingen, doelen, history) {
+  const alerts = [];
+  
+  afdelingen.forEach(a => {
+    // Alert 1: Geen afbouw laatste 3 uploads
+    if (history.length >= 4) {
+      let geenAfbouw = 0;
+      for (let i = history.length - 1; i >= Math.max(1, history.length - 3); i--) {
+        const curr = history[i].afdelingen.find(x => x.nr === a.nr);
+        const prev = history[i-1].afdelingen.find(x => x.nr === a.nr);
+        if (curr && prev && curr.oud12 >= prev.oud12) geenAfbouw++;
+      }
+      if (geenAfbouw >= 3) {
+        alerts.push({
+          type: 'danger',
+          afd: a.naam,
+          msg: '3x geen afbouw',
+          prioriteit: 3
+        });
+      }
+    }
+    
+    // Alert 2: Trend te traag
+    const trend = berekenTrendVoorspelling(history, a.nr);
+    if (trend && trend.status === 'te_traag') {
+      alerts.push({
+        type: 'warning',
+        afd: a.naam,
+        msg: 'Tempo te traag ('+trend.tekort+' weken tekort)',
+        prioriteit: 2
+      });
+    }
+    
+    // Alert 3: Boven doelstelling
+    const doel = doelen[a.nr];
+    if (doel && doel.nettoPerMaand) {
+      const prev = history.length >= 2 ? history[history.length-2].afdelingen.find(p => p.nr === a.nr) : null;
+      const netto = prev ? prev.oud12 - a.oud12 : null;
+      if (netto !== null && netto < doel.nettoPerMaand) {
+        alerts.push({
+          type: 'warning',
+          afd: a.naam,
+          msg: 'Onder doelstelling (€'+fmt(doel.nettoPerMaand - netto)+' tekort)',
+          prioriteit: 2
+        });
+      }
+    }
+  });
+  
+  return alerts.sort((a,b) => b.prioriteit - a.prioriteit);
+}
+
+// ── Actielijst Genereren ──────────────────────────────────
+function genereerActielijst(afdelingen, doelen, history) {
+  const acties = [];
+  
+  afdelingen.forEach(a => {
+    if (a.oud12 === 0) return; // Al op nul
+    
+    const doel = doelen[a.nr];
+    const doelWaarde = doel && doel.nettoPerMaand ? doel.nettoPerMaand : null;
+    
+    // Bereken wat er deze week af moet
+    const trend = berekenTrendVoorspelling(history, a.nr);
+    const gemAfbouw = trend ? trend.gemAfbouw : (a.oud12 / 20); // Fallback
+    
+    let actie = '';
+    let urgentie = 'normaal';
+    
+    if (doelWaarde) {
+      actie = 'Verkoop voor €' + fmt(Math.round(doelWaarde));
+      if (trend && trend.status === 'te_traag') {
+        urgentie = 'hoog';
+        actie = 'URGENT: Verkoop voor €' + fmt(Math.round(doelWaarde * 1.5));
+      }
+    } else {
+      actie = 'Verkoop voor ±€' + fmt(Math.round(gemAfbouw));
+    }
+    
+    acties.push({
+      nr: a.nr,
+      naam: a.naam,
+      huidig: a.oud12,
+      actie,
+      urgentie,
+      doel: doelWaarde
+    });
+  });
+  
+  return acties.sort((a,b) => {
+    if (a.urgentie === 'hoog' && b.urgentie !== 'hoog') return -1;
+    if (a.urgentie !== 'hoog' && b.urgentie === 'hoog') return 1;
+    return b.huidig - a.huidig;
+  });
+}
+
+// ── Render Manager Dashboard ──────────────────────────────
+function renderDoelstellingenOverzicht(afdelingen, doelen, history) {
+  if (history.length < 2) {
+    document.getElementById('doeloverzichtContent').innerHTML = '<p style="color:var(--muted);text-align:center;padding:40px">Minimaal 2 uploads nodig</p>';
+    return;
+  }
+  const curr = history[history.length - 1];
+  const eersteVanMaand = history[0]; // Gewoon de oudste upload
+  
+  const beginMap = {};
+  eersteVanMaand.afdelingen.forEach(a => { beginMap[a.nr] = a; });
+  const relevant = afdelingen.filter(a => a.oud12 > 0).sort((a,b) => parseInt(a.nr) - parseInt(b.nr));
+  let html = '<div style="margin-bottom:16px;font-size:.85rem;color:var(--muted)">Maandprestatie: '+eersteVanMaand.datum+' → '+curr.datum+'</div><div class="table-wrap"><table><thead><tr><th>Nr</th><th>Afdeling</th><th>Begin maand</th><th>Huidig 12+</th><th>Netto afbouw</th><th>Doelstelling/mnd</th><th>Verschil</th><th>Status</th></tr></thead><tbody>';
+  let totBegin=0,totHuidig=0,totAfbouw=0,totDoel=0;
+  relevant.forEach(a => {
+    const begin = beginMap[a.nr] ? beginMap[a.nr].oud12 : 0;
+    const huidig = a.oud12;
+    const afbouw = begin - huidig;
+    totBegin+=begin;totHuidig+=huidig;totAfbouw+=afbouw;
+    const doel = doelen[a.nr];
+    const doelWaarde = doel && doel.nettoPerMaand ? doel.nettoPerMaand : null;
+    if(doelWaarde)totDoel+=doelWaarde;
+    let verschil='—',status='<span class="status na">—</span>';
+    if(doelWaarde){
+      const diff=afbouw-doelWaarde;
+      verschil=diff>=0?'+'+fmtE(diff):fmtE(diff);
+      if(afbouw>=doelWaarde)status='<span class="status ok">✓ Gehaald</span>';
+      else if(afbouw>0)status='<span class="status warn">⚠ Tekort</span>';
+      else status='<span class="status fail">✗ Geen afbouw</span>';
+    }
+    const kleur=afbouw>0?'var(--success)':afbouw<0?'var(--danger)':'var(--muted)';
+    html+='<tr><td class="nr-col">'+a.nr+'</td><td class="name-col">'+a.naam+'</td><td>'+fmtE(begin)+'</td><td>'+fmtE(huidig)+'</td><td style="font-weight:600;color:'+kleur+'">'+fmtE(afbouw)+'</td><td>'+(doelWaarde?fmtE(doelWaarde):'—')+'</td><td style="font-weight:600;color:'+(verschil.startsWith('+')?'var(--success)':verschil.startsWith('-')?'var(--danger)':'var(--muted)')+'">'+verschil+'</td><td>'+status+'</td></tr>';
+  });
+  const totVerschil=totAfbouw-totDoel;
+  const totKleur=totAfbouw>0?'var(--success)':'var(--danger)';
+  html+='</tbody><tfoot><tr><td colspan="2"><strong>Totaal</strong></td><td><strong>'+fmtE(totBegin)+'</strong></td><td><strong>'+fmtE(totHuidig)+'</strong></td><td style="font-weight:700;color:'+totKleur+'"><strong>'+fmtE(totAfbouw)+'</strong></td><td><strong>'+fmtE(totDoel)+'</strong></td><td style="font-weight:700;color:'+(totVerschil>=0?'var(--success)':'var(--danger)')+'"><strong>'+(totVerschil>=0?'+':'')+fmtE(totVerschil)+'</strong></td><td>—</td></tr></tfoot></table></div>';
+  document.getElementById('doeloverzichtContent').innerHTML=html;
+}
+
+function renderManagerDashboard(afdelingen, doelen, history) {
+  if (history.length < 2) {
+    document.getElementById('managerContent').innerHTML = '<p style="text-align:center;color:var(--muted);padding:40px">Minimaal 2 uploads nodig</p>';
+    return;
+  }
+  
+  const curr = history[history.length - 1];
+  const eersteVanMaand = history[0];
+  
+  // Bouw begin map
+  const beginMap = {};
+  eersteVanMaand.afdelingen.forEach(a => { beginMap[a.nr] = a; });
+  
+  // Bereken prestaties per afdeling
+  const relevant = afdelingen.filter(a => a.oud12 > 0).map(a => {
+    const begin = beginMap[a.nr] ? beginMap[a.nr].oud12 : 0;
+    const huidig = a.oud12;
+    const afbouw = begin - huidig;
+    const doel = doelen[a.nr];
+    const doelWaarde = doel && doel.nettoPerMaand ? doel.nettoPerMaand : null;
+    
+    let status = 'none';
+    if (doelWaarde) {
+      if (afbouw >= doelWaarde) status = 'ok';
+      else if (afbouw < 0) status = 'fail';
+      else status = 'warn';
+    }
+    
+    return { ...a, begin, afbouw, doelWaarde, status };
+  });
+  
+  // Bereken ook voor 3+ maanden
+  const relevant3 = afdelingen.filter(a => a.oud3 > 0).map(a => {
+    const begin = beginMap[a.nr] ? beginMap[a.nr].oud3 : 0;
+    const huidig = a.oud3;
+    const afbouw = begin - huidig;
+    const doel = doelen[a.nr];
+    const doelWaarde = doel && doel.nettoPerMaand ? doel.nettoPerMaand : null;
+    
+    let status = 'none';
+    if (doelWaarde) {
+      if (afbouw >= doelWaarde) status = 'ok';
+      else if (afbouw < 0) status = 'fail';
+      else status = 'warn';
+    }
+    
+    return { ...a, begin, afbouw, doelWaarde, status };
+  });
+  
+  // Tel status voor 3+ maanden
+  const opSchema3 = relevant3.filter(a => a.status === 'ok').length;
+  const tekort3 = relevant3.filter(a => a.status === 'warn').length;
+  const gestegen3 = relevant3.filter(a => a.status === 'fail').length;
+  const geenDoel3 = relevant3.filter(a => a.status === 'none').length;
+  
+  // Totalen voor 3+ maanden
+  const totBegin3 = relevant3.reduce((s, a) => s + a.begin, 0);
+  const totHuidig3 = relevant3.reduce((s, a) => s + a.oud3, 0);
+  const totAfbouw3 = totBegin3 - totHuidig3;
+  const totDoel3 = relevant3.reduce((s, a) => s + (a.doelWaarde || 0), 0);
+  const totVerschil3 = totAfbouw3 - totDoel3;
+  
+  // Tel status
+  const opSchema = relevant.filter(a => a.status === 'ok').length;
+  const tekort = relevant.filter(a => a.status === 'warn').length;
+  const gestegen = relevant.filter(a => a.status === 'fail').length;
+  const geenDoel = relevant.filter(a => a.status === 'none').length;
+  
+  // Totalen
+  const totBegin = relevant.reduce((s, a) => s + a.begin, 0);
+  const totHuidig = relevant.reduce((s, a) => s + a.oud12, 0);
+  const totAfbouw = totBegin - totHuidig;
+  const totDoel = relevant.reduce((s, a) => s + (a.doelWaarde || 0), 0);
+  const totVerschil = totAfbouw - totDoel;
+  
+  // Build HTML
+  let html = '<div style="max-width:1400px;margin:0 auto">';
+  
+  // Header
+  html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:var(--shadow)">';
+  html += '<h2 style="font-size:1.3rem;margin-bottom:8px">📊 Management Overzicht</h2>';
+  html += '<p style="color:var(--muted);font-size:.9rem">Periode: '+eersteVanMaand.datum+' → '+curr.datum+'</p>';
+  html += '</div>';
+  
+  // 2 Kolommen: 12+ en 3+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">';
+  
+  // === KOLOM 1: 12+ MAANDEN ===
+  html += '<div>';
+  html += '<h3 style="font-size:1.1rem;margin-bottom:16px;color:var(--accent2)">📦 12+ Maanden</h3>';
+  
+  // KPI Grid 12+
+  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px">';
+  
+  html += '<div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:12px;padding:16px;text-align:center">';
+  html += '<div style="font-size:2rem;font-weight:700;color:#16a34a">'+opSchema+'</div>';
+  html += '<div style="font-size:.8rem;font-weight:600;color:#15803d;margin-top:4px">OP SCHEMA</div>';
+  html += '</div>';
+  
+  html += '<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:12px;padding:16px;text-align:center">';
+  html += '<div style="font-size:2rem;font-weight:700;color:#f59e0b">'+tekort+'</div>';
+  html += '<div style="font-size:.8rem;font-weight:600;color:#d97706;margin-top:4px">TEKORT</div>';
+  html += '</div>';
+  
+  html += '<div style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;padding:16px;text-align:center">';
+  html += '<div style="font-size:2rem;font-weight:700;color:#dc2626">'+gestegen+'</div>';
+  html += '<div style="font-size:.8rem;font-weight:600;color:#991b1b;margin-top:4px">GESTEGEN</div>';
+  html += '</div>';
+  
+  html += '<div style="background:var(--surface2);border:2px solid var(--border);border-radius:12px;padding:16px;text-align:center">';
+  html += '<div style="font-size:2rem;font-weight:700;color:var(--muted)">'+geenDoel+'</div>';
+  html += '<div style="font-size:.8rem;font-weight:600;color:var(--muted);margin-top:4px">GEEN DOEL</div>';
+  html += '</div>';
+  
+  html += '</div>';
+  
+  // Totaal prestatie 12+
+  html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:var(--shadow)">';
+  html += '<h4 style="font-size:1rem;margin-bottom:12px">💰 Totale Prestatie</h4>';
+  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;font-size:.85rem">';
+  
+  html += '<div><div style="color:var(--muted);font-size:.75rem;margin-bottom:4px">Begin maand</div><div style="font-size:1.1rem;font-weight:600">'+fmtE(totBegin)+'</div></div>';
+  html += '<div><div style="color:var(--muted);font-size:.75rem;margin-bottom:4px">Huidige stand</div><div style="font-size:1.1rem;font-weight:600">'+fmtE(totHuidig)+'</div></div>';
+  html += '<div><div style="color:var(--muted);font-size:.75rem;margin-bottom:4px">Afgebouwd</div><div style="font-size:1.1rem;font-weight:600;color:'+(totAfbouw>0?'var(--success)':'var(--danger)')+'">'+fmtE(totAfbouw)+'</div></div>';
+  html += '<div><div style="color:var(--muted);font-size:.75rem;margin-bottom:4px">Totaal doel</div><div style="font-size:1.1rem;font-weight:600">'+fmtE(totDoel)+'</div></div>';
+  
+  html += '</div>';
+  
+  // Verschil indicator 12+
+  const verschilKleur = totVerschil >= 0 ? '#16a34a' : '#dc2626';
+  const verschilBg = totVerschil >= 0 ? '#f0fdf4' : '#fef2f2';
+  html += '<div style="margin-top:16px;padding:12px;background:'+verschilBg+';border-radius:8px;text-align:center">';
+  html += '<span style="font-size:.95rem;color:'+verschilKleur+';font-weight:700">'+(totVerschil>=0?'✓ ':'✗ ')+(totVerschil>=0?'+':'')+fmtE(totVerschil)+'</span>';
+  html += '<span style="margin-left:8px;color:'+verschilKleur+';font-size:.85rem"> t.o.v. totaal doel</span>';
+  html += '</div>';
+  
+  html += '</div>';
+  html += '</div>';
+  
+  // === KOLOM 2: 3+ MAANDEN ===
+  html += '<div>';
+  html += '<h3 style="font-size:1.1rem;margin-bottom:16px;color:var(--accent)">📦 3+ Maanden</h3>';
+  
+  // Stats Grid 3+ (geen doel vergelijking)
+  const aantalAfd3 = relevant3.length;
+  const totWaarde3 = totHuidig3;
+  const gemAfbouwPerAfd3 = aantalAfd3 > 0 ? totAfbouw3 / aantalAfd3 : 0;
+  const pctOudheid3 = totBegin3 > 0 ? (totHuidig3 / totBegin3) * 100 : 0;
+  
+  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px">';
+  
+  html += '<div style="background:var(--surface);border:2px solid var(--accent);border-radius:12px;padding:16px;text-align:center">';
+  html += '<div style="font-size:2rem;font-weight:700;color:var(--accent)">'+aantalAfd3+'</div>';
+  html += '<div style="font-size:.8rem;font-weight:600;color:var(--muted);margin-top:4px">AFDELINGEN</div>';
+  html += '</div>';
+  
+  html += '<div style="background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:16px;text-align:center">';
+  html += '<div style="font-size:1.3rem;font-weight:700;color:var(--text)">'+fmtE(totWaarde3)+'</div>';
+  html += '<div style="font-size:.8rem;font-weight:600;color:var(--muted);margin-top:4px">TOTALE WAARDE</div>';
+  html += '</div>';
+  
+  const afbouwKleur3 = totAfbouw3 > 0 ? '#16a34a' : totAfbouw3 < 0 ? '#dc2626' : 'var(--muted)';
+  const afbouwBg3 = totAfbouw3 > 0 ? '#f0fdf4' : totAfbouw3 < 0 ? '#fef2f2' : 'var(--surface)';
+  html += '<div style="background:'+afbouwBg3+';border:2px solid '+afbouwKleur3+';border-radius:12px;padding:16px;text-align:center">';
+  html += '<div style="font-size:1.3rem;font-weight:700;color:'+afbouwKleur3+'">'+fmtE(totAfbouw3)+'</div>';
+  html += '<div style="font-size:.8rem;font-weight:600;color:'+afbouwKleur3+';margin-top:4px">AFGEBOUWD</div>';
+  html += '</div>';
+  
+  html += '<div style="background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:16px;text-align:center">';
+  html += '<div style="font-size:1.3rem;font-weight:700;color:var(--text)">'+fmtE(gemAfbouwPerAfd3)+'</div>';
+  html += '<div style="font-size:.8rem;font-weight:600;color:var(--muted);margin-top:4px">Ø PER AFD</div>';
+  html += '</div>';
+  
+  html += '</div>';
+  
+  // Totaal prestatie 3+
+  html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:var(--shadow)">';
+  html += '<h4 style="font-size:1rem;margin-bottom:12px">📊 Overzicht</h4>';
+  html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;font-size:.85rem">';
+  
+  html += '<div><div style="color:var(--muted);font-size:.75rem;margin-bottom:4px">Begin maand</div><div style="font-size:1.1rem;font-weight:600">'+fmtE(totBegin3)+'</div></div>';
+  html += '<div><div style="color:var(--muted);font-size:.75rem;margin-bottom:4px">Huidige stand</div><div style="font-size:1.1rem;font-weight:600">'+fmtE(totHuidig3)+'</div></div>';
+  html += '<div><div style="color:var(--muted);font-size:.75rem;margin-bottom:4px">Afgebouwd</div><div style="font-size:1.1rem;font-weight:600;color:'+(totAfbouw3>0?'var(--success)':'var(--danger)')+'">'+fmtE(totAfbouw3)+'</div></div>';
+  html += '<div><div style="color:var(--muted);font-size:.75rem;margin-bottom:4px">% Oudheid nu</div><div style="font-size:1.1rem;font-weight:600">'+pctOudheid3.toFixed(1)+'%</div></div>';
+  
+  html += '</div>';
+  html += '</div>';
+  html += '</div>';
+  
+  html += '</div>'; // Einde 2-kolommen grid
+  
+  // === PRIORITEITEN LIJSTEN ===
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px">';
+  
+  // TOP 5 AANDACHT NODIG
+  const aandachtNodig = relevant
+    .filter(a => a.status === 'warn' || a.status === 'fail')
+    .sort((a, b) => {
+      // Eerst gestegen, dan tekort, dan op grootte van het probleem
+      if (a.status === 'fail' && b.status !== 'fail') return -1;
+      if (a.status !== 'fail' && b.status === 'fail') return 1;
+      return Math.abs(b.afbouw - (b.doelWaarde || 0)) - Math.abs(a.afbouw - (a.doelWaarde || 0));
+    })
+    .slice(0, 5);
+  
+  html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:var(--shadow)">';
+  html += '<h3 style="font-size:1.1rem;margin-bottom:16px;color:#dc2626">⚠️ Top 5 - Aandacht Nodig</h3>';
+  
+  if (aandachtNodig.length === 0) {
+    html += '<p style="text-align:center;color:var(--muted);padding:20px">Alle afdelingen presteren goed! 🎉</p>';
+  } else {
+    aandachtNodig.forEach((a, idx) => {
+      const verschil = a.afbouw - (a.doelWaarde || 0);
+      const kleur = a.status === 'fail' ? '#dc2626' : '#f59e0b';
+      const icon = a.status === 'fail' ? '🔴' : '⚠️';
+      
+      html += '<div style="padding:12px;border-left:4px solid '+kleur+';background:'+(a.status === 'fail' ? '#fef2f2' : '#fffbeb')+';border-radius:6px;margin-bottom:8px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:start">';
+      html += '<div><span style="font-size:1.2rem;margin-right:8px">'+icon+'</span><strong>'+a.naam+'</strong> <span style="color:var(--muted);font-size:.85rem">('+a.nr+')</span></div>';
+      html += '<div style="text-align:right;font-size:.85rem">';
+      html += '<div style="color:'+kleur+';font-weight:600">'+fmtE(verschil)+'</div>';
+      html += '<div style="color:var(--muted);font-size:.75rem">'+(a.status === 'fail' ? 'Gestegen' : 'Tekort')+'</div>';
+      html += '</div></div>';
+      html += '<div style="margin-top:6px;font-size:.8rem;color:var(--muted)">Doel: '+fmtE(a.doelWaarde)+' | Prestatie: '+fmtE(a.afbouw)+'</div>';
+      html += '</div>';
+    });
+  }
+  
+  html += '</div>';
+  
+  // TOP 5 GOED BEZIG
+  const goedBezig = relevant
+    .filter(a => a.status === 'ok')
+    .sort((a, b) => {
+      const verschilA = a.afbouw - (a.doelWaarde || 0);
+      const verschilB = b.afbouw - (b.doelWaarde || 0);
+      return verschilB - verschilA; // Hoogste overperformance eerst
+    })
+    .slice(0, 5);
+  
+  html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:var(--shadow)">';
+  html += '<h3 style="font-size:1.1rem;margin-bottom:16px;color:#16a34a">🌟 Top 5 - Goed Bezig!</h3>';
+  
+  if (goedBezig.length === 0) {
+    html += '<p style="text-align:center;color:var(--muted);padding:20px">Nog geen afdelingen op schema</p>';
+  } else {
+    goedBezig.forEach((a, idx) => {
+      const verschil = a.afbouw - (a.doelWaarde || 0);
+      const trofee = idx === 0 ? '🏆' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '⭐';
+      
+      html += '<div style="padding:12px;border-left:4px solid #16a34a;background:#f0fdf4;border-radius:6px;margin-bottom:8px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:start">';
+      html += '<div><span style="font-size:1.2rem;margin-right:8px">'+trofee+'</span><strong>'+a.naam+'</strong> <span style="color:var(--muted);font-size:.85rem">('+a.nr+')</span></div>';
+      html += '<div style="text-align:right;font-size:.85rem">';
+      html += '<div style="color:#16a34a;font-weight:600">+'+fmtE(verschil)+'</div>';
+      html += '<div style="color:var(--muted);font-size:.75rem">Boven doel</div>';
+      html += '</div></div>';
+      html += '<div style="margin-top:6px;font-size:.8rem;color:var(--muted)">Doel: '+fmtE(a.doelWaarde)+' | Prestatie: '+fmtE(a.afbouw)+'</div>';
+      html += '</div>';
+    });
+  }
+  
+  html += '</div>';
+  
+  html += '</div>'; // Einde prioriteiten grid
+  
+  // === ARTIKEL IMPACT ANALYSE ===
+  const artikelData = loadArtikelen();
+  
+  html += '<div style="margin-top:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;box-shadow:var(--shadow)">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+  html += '<h3 style="font-size:1.2rem;color:#0f2b5b;margin:0">🎯 Artikel Impact Analyse</h3>';
+  if (artikelData) {
+    html += '<button class="btn ghost2" onclick="verwijderArtikelData()" style="font-size:.85rem;padding:6px 12px">🗑️ Wis Data</button>';
+  }
+  html += '</div>';
+  
+  if (!artikelData) {
+    html += '<div style="background:#f8fafc;border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center">';
+    html += '<p style="color:var(--muted);margin-bottom:16px">Upload een artikel export om te zien welke artikelen je moet verkopen</p>';
+    html += '<div style="display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap">';
+    html += '<select id="afdelingSelectie" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:.9rem;min-width:200px">';
+    html += '<option value="">Kies afdeling...</option>';
+    relevant.forEach(a => {
+      if (a.doelWaarde) {
+        const verschil = a.afbouw - a.doelWaarde;
+        html += '<option value="'+a.nr+'">'+a.nr+' - '+a.naam+' ('+fmtE(verschil)+')</option>';
+      }
+    });
+    html += '</select>';
+    html += '<label class="btn primary" style="cursor:pointer">';
+    html += '📦 Upload Artikelen';
+    html += '<input type="file" id="artikelenUploadManager" accept=".xls,.xlsx" style="display:none" onchange="handleArtikelUploadManager(this)">';
+    html += '</label>';
+    html += '</div>';
+    html += '<div id="uploadStatusManager" style="margin-top:12px;font-size:.85rem"></div>';
+    html += '</div>';
+  } else {
+    const afdNr = artikelData.afdelingNr;
+    const afd = afdelingen.find(a => a.nr === afdNr);
+    if (afd) {
+      const doel = doelen[afdNr];
+      const doelWaarde = doel && doel.nettoPerMaand ? doel.nettoPerMaand : 0;
+      const begin = beginMap[afdNr] ? beginMap[afdNr].oud12 : 0;
+      const huidig = afd.oud12;
+      const afbouw = begin - huidig;
+      const tekort = doelWaarde - afbouw;
+      
+      html += '<div style="background:#eff6ff;border:1px solid #3b82f6;border-radius:8px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:start">';
+      html += '<div><h4 style="font-size:1.1rem;margin-bottom:4px">'+afd.naam+' ('+afd.nr+')</h4>';
+      html += '<div style="font-size:.85rem;color:var(--muted)">'+artikelData.artikelen.length+' artikelen · '+artikelData.datum+'</div></div>';
+      html += '<button class="btn ghost2" onclick="verwijderArtikelData()" style="font-size:.8rem;padding:6px 12px">🗑️ Verwijder</button>';
+      html += '</div>';
+      
+      html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">';
+      html += '<div style="background:var(--surface2);padding:12px;border-radius:6px;text-align:center"><div style="font-size:.8rem;color:var(--muted);margin-bottom:4px">Begin maand</div><div style="font-weight:600">'+fmtE(begin)+'</div></div>';
+      html += '<div style="background:var(--surface2);padding:12px;border-radius:6px;text-align:center"><div style="font-size:.8rem;color:var(--muted);margin-bottom:4px">Huidig</div><div style="font-weight:600">'+fmtE(huidig)+'</div></div>';
+      html += '<div style="background:var(--surface2);padding:12px;border-radius:6px;text-align:center"><div style="font-size:.8rem;color:var(--muted);margin-bottom:4px">Afgebouwd</div><div style="font-weight:600;color:'+(afbouw>0?'var(--success)':'var(--danger)')+'">'+fmtE(afbouw)+'</div></div>';
+      html += '<div style="background:'+(tekort>0?'#fef2f2':'#f0fdf4')+';padding:12px;border-radius:6px;text-align:center"><div style="font-size:.8rem;color:var(--muted);margin-bottom:4px">'+(tekort>0?'Tekort':'Boven doel')+'</div><div style="font-weight:600;color:'+(tekort>0?'var(--danger)':'var(--success)')+'">'+fmtE(Math.abs(tekort))+'</div></div>';
+      html += '</div>';
+      
+      if (tekort > 0) {
+        let cumul = 0;
+        const needed = [];
+        for (let i = 0; i < artikelData.artikelen.length && cumul < tekort; i++) {
+          needed.push(artikelData.artikelen[i]);
+          cumul += artikelData.artikelen[i].waarde12plus;
+        }
+        
+        html += '<div style="background:#fef2f2;border:1px solid #dc2626;border-radius:8px;padding:16px;margin-bottom:16px"><strong style="color:#dc2626">⚠️ Verkoop deze '+needed.length+' artikelen om je doel te halen</strong><div style="font-size:.85rem;color:#dc2626;margin-top:4px">Totale waarde: '+fmtE(cumul)+' (nodig: '+fmtE(tekort)+')</div></div>';
+        
+        html += '<div style="background:white;border:1px solid var(--border);border-radius:8px;overflow:hidden">';
+        needed.forEach((art, i) => {
+          html += '<div style="display:grid;grid-template-columns:40px 1fr 80px 120px 100px;gap:12px;padding:12px;'+(i<needed.length-1?'border-bottom:1px solid var(--border)':'')+';align-items:center">';
+          html += '<div style="font-weight:600;color:var(--muted);text-align:center">#'+(i+1)+'</div>';
+          html += '<div style="font-size:.9rem"><strong>'+art.fabrikant+'</strong><br><span style="color:var(--muted);font-size:.85rem">'+art.omschrijving.substring(0,50)+'</span></div>';
+          html += '<div style="text-align:center;font-size:.85rem;color:var(--muted);font-weight:600">'+art.aantal+' st</div>';
+          html += '<div style="text-align:right;font-size:.85rem;color:var(--muted)">'+art.artikelNr+'</div>';
+          html += '<div style="text-align:right;font-weight:600;color:#dc2626">'+fmtE(art.waarde12plus)+'</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+      } else {
+        html += '<div style="background:#f0fdf4;border:1px solid #16a34a;border-radius:8px;padding:16px;text-align:center"><p style="color:#15803d;font-size:1rem">✓ Deze afdeling haalt het doel al!</p></div>';
+      }
+    }
+  }
+  
+  html += '</div>';
+  
+  document.getElementById('managerContent').innerHTML = html;
+}
+function renderPerformers(history) {
+  if (history.length < 2) {
+    ['3','12'].forEach(t => {
+      document.querySelector('#tablePerformers'+t+' tbody').innerHTML =
+        '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Upload meerdere bestanden om te analyseren</td></tr>';
+    });
+    return;
+  }
+  ['oud3','oud12'].forEach((key, idx) => {
+    const tag  = idx === 0 ? '3' : '12';
+    const curr = history[history.length-1];
+    const afds = curr.afdelingen.filter(a => a[key] > 0);
+    const results = afds.map(a => {
+      let streak = 0;
+      for (let i = history.length-1; i >= 1; i--) {
+        const hC = history[i].afdelingen.find(x => x.nr === a.nr);
+        const hP = history[i-1].afdelingen.find(x => x.nr === a.nr);
+        if (!hC || !hP) break;
+        if (hC[key] >= hP[key]) streak++; else break;
+      }
+      return { ...a, streak };
+    }).sort((a,b) => b.streak-a.streak || b[key]-a[key]).slice(0,15);
+
+    document.querySelector('#tablePerformers'+tag+' tbody').innerHTML = results.map(a => {
+      const pct = idx===0 ? a.pct3 : a.pct12;
+      const s   = a.streak;
+      const statusHtml = s===0
+        ? '<span class="status ok">\u2713 Afbouw</span>'
+        : s < DREMPEL
+          ? '<span class="status warn">\u26a0 '+s+' upload'+(s>1?'s':'')+' geen afbouw</span>'
+          : '<span class="status fail">\u2717 '+s+' uploads geen afbouw</span>';
+      return '<tr><td class="name-col">'+a.naam+'</td><td>'+fmtE(a[key])+'</td>'
+        +'<td><span class="pill '+pill(pct)+'">'+fmtP(pct)+'</span></td>'
+        +'<td style="font-family:var(--mono)">'+s+'</td>'
+        +'<td>'+statusHtml+'</td></tr>';
+    }).join('');
+  });
+}
+
+function checkDrempels(afdelingen, doelen, history) {
+  const alerts = [];
+  
+  // Check alleen nog op geen afbouw gedurende X uploads
+  if (history.length >= DREMPEL + 1) {
+    afdelingen.forEach(a => {
+      if (a.oud3 === 0) return;
+      let streak = 0;
+      for (let i = history.length-1; i >= 1; i--) {
+        const hC = history[i].afdelingen.find(x => x.nr === a.nr);
+        const hP = history[i-1].afdelingen.find(x => x.nr === a.nr);
+        if (!hC || !hP) break;
+        if (hC.oud3 >= hP.oud3) streak++; else break;
+      }
+      if (streak >= DREMPEL) {
+        const msg = a.naam+': '+streak+' uploads geen afbouw';
+        if (!alerts.find(x => x.startsWith(a.naam))) alerts.push(msg);
+      }
+    });
+  }
+  const bar = document.getElementById('alertBar');
+  if (!alerts.length) { bar.className = 'alert-bar'; return; }
+  bar.className = 'alert-bar active';
+  document.getElementById('alertItems').innerHTML = alerts.map(a => '<span class="alert-item">'+a+'</span>').join('');
+}
+
+function slaNotitieOp() {
+  if (!_history) return;
+  const datum = _history[_history.length-1].datum;
+  const tekst = document.getElementById('notitieInput').value.trim();
+  if (!tekst) return;
+  const notities = loadNotities();
+  if (!notities[datum]) notities[datum] = [];
+  notities[datum].push({ tekst, ts:Date.now() });
+  saveNotities(notities);
+  document.getElementById('notitieInput').value = '';
+  renderNotities(datum);
+}
+
+function renderNotities(datum) {
+  const notities = loadNotities();
+  const list = document.getElementById('notitieList');
+  const alle = [];
+  Object.entries(notities).forEach(([d, items]) => items.forEach(item => alle.push({ datum:d, ...item })));
+  alle.sort((a,b) => b.ts - a.ts);
+  if (!alle.length) { list.innerHTML = '<div class="no-data">Nog geen notities</div>'; return; }
+  list.innerHTML = alle.map(n =>
+    '<div class="notitie-item"><div class="ni-date">'+n.datum+'</div><div class="ni-text">'+n.tekst+'</div></div>'
+  ).join('');
+}
+
+function switchTab(btn, paneId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(paneId).classList.add('active');
+}
+
+function openBeheer() {
+  const history = loadHistory();
+  const list = document.getElementById('beheerList');
+  if (!history.length) { list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--muted)">Geen uploads opgeslagen</div>'; }
+  else {
+    list.innerHTML = [...history].reverse().map((h,ri) => {
+      const idx = history.length-1-ri;
+      const t   = h.afdelingen.reduce((s,a)=>s+a.totaal,0);
+      const o3  = h.afdelingen.reduce((s,a)=>s+a.oud3,0);
+      const ic  = idx === history.length-1;
+      return '<div class="beheer-row">'
+        +'<div class="bdate">'+h.datum+(ic?' <span style="background:#dbeafe;color:#1d4ed8;font-size:.68rem;padding:1px 6px;border-radius:10px">huidig</span>':'')+'</div>'
+        +'<div class="bvals">Totaal: '+fmtE(t)+' &middot; 3+ mnd: '+fmtE(o3)+'</div>'
+        +'<button class="bdel" onclick="deleteUpload('+idx+')">&#128465; Verwijderen</button></div>';
+    }).join('');
+  }
+  document.getElementById('beheerModal').classList.add('open');
+}
+function closeBeheer() { document.getElementById('beheerModal').classList.remove('open'); }
+function deleteUpload(idx) {
+  const history = loadHistory();
+  if (!history[idx]) return;
+  if (!confirm('Upload van '+history[idx].datum+' verwijderen?')) return;
+  history.splice(idx,1);
+  saveHistory(history);
+  if (!history.length) {
+    closeBeheer();
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('upload-screen').style.display = 'flex';
+    document.getElementById('topbarDate').textContent = '\u2014';
+    _history = null;
+  } else { closeBeheer(); renderDashboard(history); }
+}
+
+
+function exportMailExcel() {
+  if (!_history || _history.length < 2) {
+    alert('Je hebt minimaal 2 uploads nodig om afbouw te berekenen');
+    return;
+  }
+  
+  const curr = _history[_history.length - 1];
+  const prev = _history[_history.length - 2];
+  const datum = curr.datum;
+  const prevDatum = prev.datum;
+  
+  // Week afbouw berekening: maandag t/m zondag
+  const now = new Date(curr.ts);
+  const dayOfWeek = now.getDay(); // 0=zondag, 1=maandag, etc
+  
+  let weekStartDate, weekEndDate;
+  
+  if (dayOfWeek === 1) {
+    // Het is MAANDAG: toon vorige week (ma t/m zo)
+    weekStartDate = new Date(now);
+    weekStartDate.setDate(now.getDate() - 7); // Vorige maandag
+    weekStartDate.setHours(0, 0, 0, 0);
+    weekEndDate = new Date(now);
+    weekEndDate.setDate(now.getDate() - 1); // Gisteren (zondag)
+    weekEndDate.setHours(23, 59, 59, 999);
+  } else {
+    // DINSDAG t/m ZONDAG: toon huidige week (vanaf maandag deze week)
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    weekStartDate = new Date(now);
+    weekStartDate.setDate(now.getDate() - daysToMonday);
+    weekStartDate.setHours(0, 0, 0, 0);
+    weekEndDate = now; // Tot nu
+  }
+  
+  // Vind uploads binnen deze week-periode
+  const uploadsInWeek = _history.filter(h => {
+    return h.ts >= weekStartDate.getTime() && h.ts <= weekEndDate.getTime();
+  });
+  const weekStartUpload = uploadsInWeek.length >= 1 ? uploadsInWeek[0] : null;
+  
+  const relevant = curr.afdelingen
+    .filter(a => a.oud12 > 0 || (prev.afdelingen.find(p => p.nr === a.nr) && prev.afdelingen.find(p => p.nr === a.nr).oud12 > 0))
+    .sort((a,b) => parseInt(a.nr) - parseInt(b.nr));
+  
+  let totCurr = 0, totPrev = 0, totDag = 0, totWeek = 0;
+  
+  const rows = relevant.map(a => {
+    const prevAfd = prev.afdelingen.find(p => p.nr === a.nr);
+    const weekAfd = weekStartUpload ? weekStartUpload.afdelingen.find(w => w.nr === a.nr) : null;
+    
+    const curr12 = a.oud12;
+    const prev12 = prevAfd ? prevAfd.oud12 : 0;
+    const week12 = weekAfd ? weekAfd.oud12 : 0;
+    
+    const dag = prev12 > 0 ? prev12 - curr12 : 0;
+    const week = week12 > 0 ? week12 - curr12 : 0;
+    const weekPct = week12 > 0 ? week / week12 : 0;
+    
+    totCurr += curr12;
+    totPrev += prev12;
+    totDag += dag;
+    totWeek += week;
+    
+    const dagColor = dag > 0 ? '#16a34a' : dag < 0 ? '#dc2626' : '#64748b';
+    const weekColor = week > 0 ? '#16a34a' : week < 0 ? '#dc2626' : '#64748b';
+    
+    return '<tr>'
+      +'<td style="padding:6px 10px;font-size:11px;color:#64748b">'+a.nr+'</td>'
+      +'<td style="padding:6px 10px;font-size:12px;font-weight:500">'+a.naam+'</td>'
+      +'<td style="padding:6px 10px;font-size:11px;text-align:right">'+(prev12 > 0 ? fmtE(prev12) : '—')+'</td>'
+      +'<td style="padding:6px 10px;font-size:11px;text-align:right">'+(curr12 > 0 ? fmtE(curr12) : '—')+'</td>'
+      +'<td style="padding:6px 10px;font-size:11px;text-align:right;font-weight:600;color:'+dagColor+'">'+(dag !== 0 ? fmtE(dag) : '€ 0')+'</td>'
+      +'<td style="padding:6px 10px;font-size:11px;text-align:right;font-weight:600;color:'+weekColor+'">'+(week !== 0 ? fmtE(week) : '€ 0')+'</td>'
+      +'<td style="padding:6px 10px;font-size:11px;text-align:right">'+(weekPct !== 0 ? fmtP(weekPct) : '0%')+'</td>'
+      +'</tr>';
+  }).join('');
+  
+  const totWeekPct = totPrev > 0 ? totWeek / totPrev : 0;
+  
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Oudheid 12+ '+datum+'</title><style>'
+    +'*{margin:0;padding:0;box-sizing:border-box}'
+    +'body{font-family:Calibri,Arial,sans-serif;color:#1e2340;background:white;padding:20mm}'
+    +'@page{margin:15mm;size:A4 portrait}'
+    +'@media print{body{padding:0}}'
+    +'.header{background:#0f2b5b;color:white;padding:16px 22px;border-radius:8px;margin-bottom:16px}'
+    +'.header h1{font-size:17px;font-weight:700;margin-bottom:4px}'
+    +'.header .sub{font-size:10px;opacity:.8}'
+    +'.uitleg{background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:11px;line-height:1.6;color:#1e40af}'
+    +'table{width:100%;border-collapse:collapse;font-size:11px}'
+    +'th{background:#0f2b5b;color:white;padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-align:left}'
+    +'th.r{text-align:right}'
+    +'td{border-bottom:1px solid #e2e8f0;vertical-align:middle}'
+    +'.totaal{background:#fffbeb!important;font-weight:700;border-top:2px solid #d97706}'
+    +'.footer{margin-top:16px;font-size:10px;color:#94a3b8;text-align:center;border-top:1px solid #e2e8f0;padding-top:8px}'
+    +'</style></head><body>'
+    +'<div class="header">'
+    +'<h1>📊 Voorraad Oudheid 12+ Maanden</h1>'
+    +'<div class="sub">Peildatum: '+datum+' · Vergeleken met: '+prevDatum+' · Vestiging 853</div>'
+    +'</div>'
+    +'<div class="uitleg">'
+    +'<strong>💡 Toelichting:</strong> '
+    +'<strong>Afbouw per dag</strong> = verschil tussen vorige upload en huidige upload. '
+    +'<strong>Afbouw deze week</strong> = verschil tussen oudste upload in afgelopen 7 dagen en huidige upload. '
+    +'<span style="color:#16a34a;font-weight:600">Groen</span> = afgebouwd, '
+    +'<span style="color:#dc2626;font-weight:600">Rood</span> = gestegen.'
+    +'</div>'
+    +'<table>'
+    +'<thead><tr><th>Nr</th><th>Afdeling</th><th class="r">'+prevDatum+'</th><th class="r">'+datum+'</th><th class="r">Afbouw per dag</th><th class="r">Afbouw deze week</th><th class="r">Week %</th></tr></thead>'
+    +'<tbody>'+rows
+    +'<tr class="totaal">'
+    +'<td style="padding:8px 10px"></td>'
+    +'<td style="padding:8px 10px;font-size:12px">Totaal</td>'
+    +'<td style="padding:8px 10px;text-align:right">'+fmtE(totPrev)+'</td>'
+    +'<td style="padding:8px 10px;text-align:right">'+fmtE(totCurr)+'</td>'
+    +'<td style="padding:8px 10px;text-align:right;font-weight:700;color:'+(totDag>0?'#16a34a':'#dc2626')+'">'+fmtE(totDag)+'</td>'
+    +'<td style="padding:8px 10px;text-align:right;font-weight:700;color:'+(totWeek>0?'#16a34a':'#dc2626')+'">'+fmtE(totWeek)+'</td>'
+    +'<td style="padding:8px 10px;text-align:right">'+fmtP(totWeekPct)+'</td>'
+    +'</tr>'
+    +'</tbody></table>'
+    +'<div class="footer">Voorraad Oudheid Dashboard · Vestiging 853 · Gegenereerd: '+new Date().toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'})+' · '+new Date().toLocaleDateString('nl-NL')+'</div>'
+    +'</body></html>';
+  
+  // Open in nieuw venster voor print
+  const pw = window.open('', '_blank', 'width=900,height=1200');
+  if (!pw) {
+    alert('Popup geblokkeerd. Sta popups toe voor deze site.');
+    return;
+  }
+  pw.document.write(html);
+  pw.document.close();
+  
+  // Auto-print na korte delay
+  setTimeout(() => {
+    pw.print();
+  }, 250);
+}
+
+
+
+function export3mPDF() {
+  if (!_history || !_history.length) return;
+  const curr = _history[_history.length - 1];
+  const prev = _history.length >= 2 ? _history[_history.length - 2] : null;
+  const eersteVanMaand = _history.length >= 2 ? _history[0] : null;
+
+  const pm = {};
+  if (prev) prev.afdelingen.forEach(a => { pm[a.nr] = a; });
+  const beginMap = {};
+  if (eersteVanMaand) eersteVanMaand.afdelingen.forEach(a => { beginMap[a.nr] = a.oud3; });
+
+  const beginDate = eersteVanMaand ? new Date(eersteVanMaand.ts) : null;
+  const currDate = new Date(curr.ts);
+  const dagen = beginDate ? Math.max(1, Math.ceil((currDate - beginDate) / (1000*60*60*24))) : null;
+
+  const afds = [...curr.afdelingen].filter(a => a.oud3 > 0).sort((a,b) => parseInt(a.nr) - parseInt(b.nr));
+  const totaal = afds.reduce((s,a) => s+a.totaal, 0);
+  const oud3tot = afds.reduce((s,a) => s+a.oud3, 0);
+  const prevOud3 = prev ? prev.afdelingen.reduce((s,a) => s+a.oud3, 0) : null;
+  const beginTotaal = eersteVanMaand ? eersteVanMaand.afdelingen.reduce((s,a) => s+a.oud3, 0) : null;
+  const maandAfgebouwd = beginTotaal !== null ? beginTotaal - oud3tot : null;
+  const gemPerDag = (maandAfgebouwd !== null && dagen) ? maandAfgebouwd / dagen : null;
+
+  // Kleur helper
+  const kleurV = v => v === null ? '' : v >= 0 ? '#16a34a' : '#dc2626';
+  const pijl = v => v === null ? '—' : v > 0 ? '▼ '+fmtE(v) : v < 0 ? '▲ '+fmtE(Math.abs(v)) : '±0';
+  const pijlKleur = v => v === null ? '#94a3b8' : v > 0 ? '#16a34a' : v < 0 ? '#dc2626' : '#94a3b8';
+  const pillCls = p => p < 0.15 ? '#dcfce7;color:#15803d' : p < 0.30 ? '#fef3c7;color:#92400e' : '#fee2e2;color:#991b1b';
+
+  let totDelta = null, totMaand = 0;
+
+  const rows = afds.map(a => {
+    const p = pm[a.nr];
+    const dif = p ? p.oud3 - a.oud3 : null;
+    const mAfb = beginMap[a.nr] !== undefined ? beginMap[a.nr] - a.oud3 : null;
+    if (mAfb !== null) totMaand += mAfb;
+    if (dif !== null) totDelta = (totDelta||0) + dif;
+    const pct = a.totaal > 0 ? a.oud3/a.totaal : 0;
+    const pc = pillCls(pct);
+    return '<tr>'
+      +'<td style="padding:4px 8px;font-size:10px;color:#6b7394">'+a.nr+'</td>'
+      +'<td style="padding:4px 8px;font-size:11px;font-weight:500">'+a.naam+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;text-align:right">'+fmtE(a.totaal)+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;text-align:right;font-weight:600">'+fmtE(a.oud3)+'</td>'
+      +'<td style="padding:4px 8px;text-align:center"><span style="background:'+pc+';padding:1px 6px;border-radius:10px;font-size:10px;font-weight:600">'+fmtP(pct)+'</span></td>'
+      +'<td style="padding:6px 10px;font-size:11px;text-align:right;color:'+pijlKleur(dif)+'">'+pijl(dif)+'</td>'
+      +'<td style="padding:6px 10px;font-size:11px;text-align:right;color:'+pijlKleur(mAfb)+'">'+pijl(mAfb)+'</td>'
+      +'</tr>';
+  }).join('');
+
+  const totPct = totaal > 0 ? oud3tot/totaal : 0;
+  const totPc = pillCls(totPct);
+  const totRow = '<tr style="background:#fffbeb;border-top:2px solid #d97706;font-weight:700">'
+    +'<td style="padding:5px 8px"></td>'
+    +'<td style="padding:5px 8px">Totaal</td>'
+    +'<td style="padding:5px 8px;text-align:right">'+fmtE(totaal)+'</td>'
+    +'<td style="padding:5px 8px;text-align:right">'+fmtE(oud3tot)+'</td>'
+    +'<td style="padding:5px 8px;text-align:center"><span style="background:'+totPc+';padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600">'+fmtP(totPct)+'</span></td>'
+    +'<td style="padding:5px 8px;text-align:right;color:'+pijlKleur(totDelta)+'">'+pijl(totDelta)+'</td>'
+    +'<td style="padding:5px 8px;text-align:right;color:'+pijlKleur(totMaand)+'">'+pijl(totMaand)+'</td>'
+    +'</tr>';
+
+  // Samenvatting balk
+  const samenvattingHtml = eersteVanMaand
+    ? '<div style="background:#eff6ff;border:1px solid #bfdbfe;padding:12px 16px;border-radius:6px;margin-bottom:16px;font-size:12px">'
+      +'<strong>📈 Overzicht:</strong> Begin maand: '+fmtE(beginTotaal)+' → Nu: '+fmtE(oud3tot)
+      +' → <span style="color:'+kleurV(maandAfgebouwd)+';font-weight:700">Afgebouwd: '+fmtE(maandAfgebouwd)+'</span>'
+      +(gemPerDag!==null?' → Gemiddeld per dag: <span style="color:'+kleurV(gemPerDag)+'">'+fmtE(gemPerDag)+'</span>' : '')
+      +'</div>'
+    : '';
+
+  const periodeStr = eersteVanMaand
+    ? 'Periode: '+eersteVanMaand.datum+' t/m '+curr.datum+(dagen?' ('+dagen+' dagen)':'')+' · Vestiging 853'
+    : 'Peildatum: '+curr.datum+' · Vestiging 853';
+
+  const pw = window.open('','_blank','width=1100,height=1200');
+  pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>3+ Maanden '+curr.datum+'</title>'
+    +'<style>*{margin:0;padding:0}body{font-family:Calibri,Arial;padding:20px}@page{margin:15mm}'
+    +'.header{background:#0f2b5b;color:white;padding:16px;border-radius:8px;margin-bottom:16px}'
+    +'.header h1{font-size:17px}.header .sub{font-size:10px;opacity:.8}'
+    +'table{width:100%;border-collapse:collapse}thead tr{background:#f0f2f8}'
+    +'th{padding:6px 8px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#6b7394;text-align:left;border-bottom:2px solid #dde1ef}'
+    +'th.r{text-align:right}th.c{text-align:center}'
+    +'td{border-bottom:1px solid #e2e8f0}'
+    +'tbody tr:hover{background:#f8f9ff}'
+    +'.footer{margin-top:16px;font-size:10px;text-align:center;color:#94a3b8}'
+    +'</style></head><body>'
+    +'<div class="header"><h1>📊 Analyse 3+ Maanden</h1><div class="sub">'+periodeStr+'</div></div>'
+    +samenvattingHtml
+    +'<table><thead><tr>'
+    +'<th>Nr</th><th>Afdeling</th><th class="r">Totale Waarde</th><th class="r">Waarde 3+ mnd</th>'
+    +'<th class="c">% Oudheid</th><th class="r">Afbouw gister</th><th class="r">Afgebouwd deze maand</th>'
+    +'</tr></thead><tbody>'+rows+totRow+'</tbody></table>'
+    +'<div class="footer">Gegenereerd: '+new Date().toLocaleString('nl-NL')+'</div>'
+    +'</body></html>');
+  pw.document.close();
+  setTimeout(() => pw.print(), 250);
+}
+
+function export12mPDF() {
+  if (!_history || !_history.length) return;
+  const curr = _history[_history.length - 1];
+  const prev = _history.length >= 2 ? _history[_history.length - 2] : null;
+  const eersteVanMaand = _history.length >= 2 ? _history[0] : null;
+  const doelen = loadDoelen();
+
+  const pm = {};
+  if (prev) prev.afdelingen.forEach(a => { pm[a.nr] = a; });
+  const beginMap = {};
+  if (eersteVanMaand) eersteVanMaand.afdelingen.forEach(a => { if (a.oud12 > 0) beginMap[a.nr] = a.oud12; });
+
+  const beginDate = eersteVanMaand ? new Date(eersteVanMaand.ts) : null;
+  const currDate = new Date(curr.ts);
+  const dagen = beginDate ? Math.max(1, Math.ceil((currDate - beginDate) / (1000*60*60*24))) : null;
+
+  const afds = [...curr.afdelingen].filter(a => a.oud12 > 0).sort((a,b) => parseInt(a.nr) - parseInt(b.nr));
+  const totaal = curr.afdelingen.reduce((s,a) => s+a.totaal, 0);
+  const oud12tot = afds.reduce((s,a) => s+a.oud12, 0);
+  const beginTotaal = eersteVanMaand ? eersteVanMaand.afdelingen.reduce((s,a) => s+a.oud12, 0) : null;
+  const maandAfgebouwd = beginTotaal !== null ? beginTotaal - oud12tot : null;
+  const gemPerDag = (maandAfgebouwd !== null && dagen) ? maandAfgebouwd / dagen : null;
+
+  const kleurV = v => v === null ? '' : v >= 0 ? '#16a34a' : '#dc2626';
+  const pijl = v => v === null ? '—' : v > 0 ? '▼ '+fmtE(v) : v < 0 ? '▲ '+fmtE(Math.abs(v)) : '±0';
+  const pijlKleur = v => v === null ? '#94a3b8' : v > 0 ? '#16a34a' : v < 0 ? '#dc2626' : '#94a3b8';
+  const pillCls = p => p <= 0 ? '#f1f5f9;color:#94a3b8' : p <= 0.01 ? '#fef3c7;color:#92400e' : '#fee2e2;color:#991b1b';
+
+  let totDelta = null, totMaand = 0;
+
+  const rows = afds.map(a => {
+    const p = pm[a.nr];
+    const dif = p ? p.oud12 - a.oud12 : null;
+    const mAfb = beginMap[a.nr] !== undefined ? beginMap[a.nr] - a.oud12 : null;
+    if (mAfb !== null) totMaand += mAfb;
+    if (dif !== null) totDelta = (totDelta||0) + dif;
+    const pct = a.totaal > 0 ? a.oud12/a.totaal : 0;
+    const pc = pillCls(pct);
+
+    // Doelstelling — gebaseerd op maandafbouw
+    const doel = doelen[a.nr];
+    let doelTekst = '—';
+    let doelKleur = '#94a3b8';
+    if (doel && doel.nettoPerMaand) {
+      const target = doel.nettoPerMaand;
+      if (mAfb === null) {
+        doelTekst = '— Geen data / '+fmtE(target);
+        doelKleur = '#92400e';
+      } else if (mAfb >= target) {
+        doelTekst = '✓ Gehaald  '+fmtE(mAfb)+' / '+fmtE(target);
+        doelKleur = '#15803d';
+      } else if (mAfb < 0) {
+        doelTekst = '↑ Gestegen / '+fmtE(target);
+        doelKleur = '#991b1b';
+      } else if (mAfb === 0) {
+        doelTekst = '— Geen afbouw / '+fmtE(target);
+        doelKleur = '#92400e';
+      } else {
+        doelTekst = '⚠ €'+fmt(target-mAfb)+' tekort / '+fmtE(target);
+        doelKleur = '#92400e';
+      }
+    }
+
+    return '<tr>'
+      +'<td style="padding:4px 8px;font-size:10px;color:#6b7394">'+a.nr+'</td>'
+      +'<td style="padding:4px 8px;font-size:11px;font-weight:500">'+a.naam+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;text-align:right">'+fmtE(a.totaal)+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;text-align:right;font-weight:600">'+fmtE(a.oud12)+'</td>'
+      +'<td style="padding:4px 8px;text-align:center"><span style="background:'+pc+';padding:1px 6px;border-radius:10px;font-size:10px;font-weight:600">'+fmtP(pct)+'</span></td>'
+      +'<td style="padding:4px 8px;font-size:10px;text-align:right;color:'+pijlKleur(dif)+'">'+pijl(dif)+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;text-align:right;color:'+pijlKleur(mAfb)+'">'+pijl(mAfb)+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;color:'+doelKleur+'">'+doelTekst+'</td>'
+      +'</tr>';
+  }).join('');
+
+  const totPct = totaal > 0 ? oud12tot/totaal : 0;
+  const totPc = pillCls(totPct);
+  // Bereken totaal doelstelling verschil voor onderaan de tabel
+  let totDoelExport = 0;
+  afds.forEach(a => { const d = doelen[a.nr]; if (d && d.nettoPerMaand) totDoelExport += d.nettoPerMaand; });
+  const verschilExport = totMaand - totDoelExport;
+  const vKleurExport = verschilExport >= 0 ? '#15803d' : '#991b1b';
+  const vTekstExport = totDoelExport > 0
+    ? (verschilExport >= 0 ? '✓ '+fmtE(verschilExport)+' voor op doel' : '⚠ '+fmtE(Math.abs(verschilExport))+' tekort op doel')
+    : '—';
+
+  const totRow = '<tr style="background:#fffbeb;border-top:2px solid #d97706;font-weight:700">'
+    +'<td style="padding:5px 8px"></td>'
+    +'<td style="padding:5px 8px">Totaal</td>'
+    +'<td style="padding:5px 8px;text-align:right">'+fmtE(totaal)+'</td>'
+    +'<td style="padding:5px 8px;text-align:right">'+fmtE(oud12tot)+'</td>'
+    +'<td style="padding:5px 8px;text-align:center"><span style="background:'+totPc+';padding:1px 6px;border-radius:10px;font-size:10px;font-weight:600">'+fmtP(totPct)+'</span></td>'
+    +'<td style="padding:5px 8px;text-align:right;color:'+pijlKleur(totDelta)+'">'+pijl(totDelta)+'</td>'
+    +'<td style="padding:5px 8px;text-align:right;color:'+pijlKleur(totMaand)+'">'+pijl(totMaand)+'</td>'
+    +'<td style="padding:5px 8px;color:'+vKleurExport+';font-weight:700">'+vTekstExport+'</td>'
+    +'</tr>';
+
+  // Bereken totaal doelstelling en verschil voor PDF
+  let totDoelPDF = 0;
+  afds.forEach(a => { const d = doelen[a.nr]; if (d && d.nettoPerMaand) totDoelPDF += d.nettoPerMaand; });
+  const verschilPDF = maandAfgebouwd !== null ? maandAfgebouwd - totDoelPDF : null;
+  const verschilKleur = verschilPDF !== null ? (verschilPDF >= 0 ? '#15803d' : '#991b1b') : '#94a3b8';
+  const verschilTekst = verschilPDF !== null ? (verschilPDF >= 0 ? '✓ '+fmtE(verschilPDF)+' voor op doel' : '⚠ '+fmtE(Math.abs(verschilPDF))+' tekort op doel') : '—';
+
+  const samenvattingHtml = eersteVanMaand
+    ? '<div style="background:#eff6ff;border:1px solid #bfdbfe;padding:12px 16px;border-radius:6px;margin-bottom:16px;font-size:12px">'
+      +'<strong>📈 Overzicht:</strong> Begin maand: '+fmtE(beginTotaal)+' → Nu: '+fmtE(oud12tot)
+      +' → <span style="color:'+kleurV(maandAfgebouwd)+';font-weight:700">Afgebouwd: '+fmtE(maandAfgebouwd)+'</span>'
+      +(gemPerDag!==null?' → Gemiddeld per dag: <span style="color:'+kleurV(gemPerDag)+'">'+fmtE(gemPerDag)+'</span>' : '')
+      +(totDoelPDF>0?' → Totaal doel: '+fmtE(totDoelPDF)+' → <span style="color:'+verschilKleur+';font-weight:700">'+verschilTekst+'</span>' : '')
+      +'</div>'
+    : '';
+
+  const periodeStr = eersteVanMaand
+    ? 'Periode: '+eersteVanMaand.datum+' t/m '+curr.datum+(dagen?' ('+dagen+' dagen)':'')+' · Vestiging 853'
+    : 'Peildatum: '+curr.datum+' · Vestiging 853';
+
+  const pw = window.open('','_blank','width=1200,height=1200');
+  pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>12+ Maanden '+curr.datum+'</title>'
+    +'<style>*{margin:0;padding:0}body{font-family:Calibri,Arial;padding:20px}@page{margin:15mm}'
+    +'.header{background:#0f2b5b;color:white;padding:16px;border-radius:8px;margin-bottom:16px}'
+    +'.header h1{font-size:17px}.header .sub{font-size:10px;opacity:.8}'
+    +'table{width:100%;border-collapse:collapse}thead tr{background:#f0f2f8}'
+    +'th{padding:6px 8px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#6b7394;text-align:left;border-bottom:2px solid #dde1ef}'
+    +'th.r{text-align:right}th.c{text-align:center}'
+    +'td{border-bottom:1px solid #e2e8f0}'
+    +'.footer{margin-top:16px;font-size:10px;text-align:center;color:#94a3b8}'
+    +'</style></head><body>'
+    +'<div class="header"><h1>📊 Analyse 12+ Maanden</h1><div class="sub">'+periodeStr+'</div></div>'
+    +samenvattingHtml
+    +'<table><thead><tr>'
+    +'<th>Nr</th><th>Afdeling</th><th class="r">Totale Waarde</th><th class="r">Waarde 12+ mnd</th>'
+    +'<th class="c">% Oudheid</th><th class="r">Afbouw gister</th><th class="r">Afgebouwd deze maand</th><th style="text-align:left">Vs. Doel</th>'
+    +'</tr></thead><tbody>'+rows+totRow+'</tbody></table>'
+    +'<div class="footer">Gegenereerd: '+new Date().toLocaleString('nl-NL')+'</div>'
+    +'</body></html>');
+  pw.document.close();
+  setTimeout(() => pw.print(), 250);
+}
+
+function exportMaandProgressiePDF(tag, oudKey, title) {
+  if (!_history || _history.length < 2) return;
+  
+  const curr = _history[_history.length - 1];
+  const eersteVanMaand = _history[0];
+  
+  const beginMap = {};
+  eersteVanMaand.afdelingen.forEach(a => { beginMap[a.nr] = a; });
+  
+  const afds = curr.afdelingen.filter(a => a[oudKey] > 0 || (beginMap[a.nr] && beginMap[a.nr][oudKey] > 0)).sort((a,b) => parseInt(a.nr) - parseInt(b.nr));
+  
+  const beginDate = new Date(eersteVanMaand.ts);
+  const currDate = new Date(curr.ts);
+  const dagen = Math.max(1, Math.ceil((currDate - beginDate) / (1000 * 60 * 60 * 24)));
+  
+  let totBegin = 0, totNu = 0, totAfgebouwd = 0;
+  
+  const rows = afds.map(a => {
+    const begin = beginMap[a.nr] ? beginMap[a.nr][oudKey] : 0;
+    const nu = a[oudKey];
+    const afgebouwd = begin - nu;
+    const perDag = afgebouwd / dagen;
+    
+    totBegin += begin;
+    totNu += nu;
+    totAfgebouwd += afgebouwd;
+    
+    const kleur = afgebouwd >= 0 ? '#16a34a' : '#dc2626';
+    return '<tr><td style="padding:6px 10px;font-size:11px">'+a.nr+'</td><td style="padding:6px 10px;font-size:12px">'+a.naam+'</td><td style="padding:6px 10px;font-size:11px;text-align:right">'+fmtE(begin)+'</td><td style="padding:6px 10px;font-size:11px;text-align:right">'+fmtE(nu)+'</td><td style="padding:6px 10px;font-size:11px;text-align:right;font-weight:600;color:'+kleur+'">'+fmtE(afgebouwd)+'</td><td style="padding:6px 10px;font-size:11px;text-align:right;color:'+kleur+'">'+fmtE(perDag)+'</td></tr>';
+  }).join('');
+  
+  const totPerDag = totAfgebouwd / dagen;
+  const totKleur = totAfgebouwd >= 0 ? '#16a34a' : '#dc2626';
+  const totRow = '<tr style="background:#fffbeb;border-top:2px solid #d97706"><td colspan="2" style="padding:8px 10px;font-weight:700">Totaal</td><td style="padding:8px 10px;text-align:right;font-weight:700">'+fmtE(totBegin)+'</td><td style="padding:8px 10px;text-align:right;font-weight:700">'+fmtE(totNu)+'</td><td style="padding:8px 10px;text-align:right;font-weight:700;color:'+totKleur+'">'+fmtE(totAfgebouwd)+'</td><td style="padding:8px 10px;text-align:right;font-weight:700;color:'+totKleur+'">'+fmtE(totPerDag)+'</td></tr>';
+  
+  const pw = window.open('','_blank','width=1000,height=1200');
+  pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Maand Progressie '+title+' '+curr.datum+'</title><style>*{margin:0;padding:0}body{font-family:Calibri,Arial;padding:20px}@page{margin:15mm}.header{background:#0f2b5b;color:white;padding:16px;border-radius:8px;margin-bottom:16px}.header h1{font-size:17px}.header .sub{font-size:10px;opacity:.8}.info-box{background:#eff6ff;border:1px solid #bfdbfe;padding:12px;border-radius:6px;margin-bottom:16px;font-size:12px}table{width:100%;border-collapse:collapse;font-size:11px}th{background:#0f2b5b;color:white;padding:8px 10px;font-size:10px}th.r{text-align:right}td{border-bottom:1px solid #e2e8f0}.footer{margin-top:16px;font-size:10px;text-align:center}</style></head><body><div class="header"><h1>📊 Maand Progressie '+title+'</h1><div class="sub">Periode: '+eersteVanMaand.datum+' t/m '+curr.datum+' ('+dagen+' dagen) · Vestiging 853</div></div><div class="info-box"><strong>📈 Overzicht:</strong> Begin maand: '+fmtE(totBegin)+' → Nu: '+fmtE(totNu)+' → <span style="color:'+totKleur+';font-weight:700">Afgebouwd: '+fmtE(totAfgebouwd)+'</span> → Gemiddeld per dag: <span style="color:'+totKleur+'">'+fmtE(totPerDag)+'</span></div><table><thead><tr><th>Nr</th><th>Afdeling</th><th class="r">Begin maand</th><th class="r">Huidige stand</th><th class="r">Afgebouwd</th><th class="r">Ø Per dag</th></tr></thead><tbody>'+rows+totRow+'</tbody></table><div class="footer">Gegenereerd: '+new Date().toLocaleString('nl-NL')+'</div></body></html>');
+  pw.document.close();
+  setTimeout(() => pw.print(), 250);
+}
+
+function exportExcel() {
+  if (!_history || !_history.length) return;
+  const curr = _history[_history.length-1];
+  const prev = _history.length >= 2 ? _history[_history.length-2] : null;
+  const { datum, afdelingen } = curr;
+  const pm = {};
+  if (prev) prev.afdelingen.forEach(a => { pm[a.nr] = a; });
+  const totaal = afdelingen.reduce((s,a)=>s+a.totaal,0);
+  const wb = XLSX.utils.book_new();
+  const d3 = [['Nr','Afdeling','Totale Waarde','Waarde 3+ mnd','% Oudheid','Afbouw gister'],
+    ...[...afdelingen].sort((a,b)=>b.oud3-a.oud3).map(a=>[a.nr,a.naam,a.totaal,a.oud3,fmtP(a.pct3),pm[a.nr]?pm[a.nr].oud3-a.oud3:''])];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Peildatum: '+datum],[],d3[0],...d3.slice(1)]), 'Analyse 3+ Maanden');
+  const d12 = [['Nr','Afdeling','Totale Waarde','Waarde 12+ mnd','% Oudheid','Afbouw gister'],
+    ...[...afdelingen].sort((a,b)=>b.oud12-a.oud12).map(a=>[a.nr,a.naam,a.totaal,a.oud12,fmtP(a.pct12),pm[a.nr]?pm[a.nr].oud12-a.oud12:''])];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Peildatum: '+datum],[],d12[0],...d12.slice(1)]), 'Analyse 12+ Maanden');
+  const hh = [['Datum','Totale Voorraad','3+ Maanden','12+ Maanden'],
+    ..._history.map(h=>[h.datum,h.afdelingen.reduce((s,a)=>s+a.totaal,0),h.afdelingen.reduce((s,a)=>s+a.oud3,0),h.afdelingen.reduce((s,a)=>s+a.oud12,0)])];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hh), 'Historie');
+  XLSX.writeFile(wb, 'Voorraad_Analyse_'+datum.replace(/[\s:]/g,'_')+'.xlsx');
+}
+
+// ── Resizable columns ─────────────────────────────────────
+function makeResizable(tableId) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  const ths = table.querySelectorAll('thead th');
+  ths.forEach((th, i) => {
+    // Sla de laatste th over (Vs. Doel heeft geen resizer nodig aan de rechterkant)
+    const resizer = document.createElement('div');
+    resizer.className = 'col-resizer';
+    th.appendChild(resizer);
+
+    let startX, startW;
+    resizer.addEventListener('mousedown', e => {
+      startX = e.pageX;
+      startW = th.offsetWidth;
+      resizer.classList.add('dragging');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+
+      const onMove = e => {
+        const newW = Math.max(60, startW + (e.pageX - startX));
+        th.style.width = newW + 'px';
+        th.style.minWidth = newW + 'px';
+      };
+      const onUp = () => {
+        resizer.classList.remove('dragging');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      e.preventDefault();
+    });
+  });
+}
+
+// Resizable columns worden geïnitialiseerd via renderDashboard
+</script>
+</body>
+</html>
