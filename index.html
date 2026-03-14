@@ -2376,39 +2376,39 @@ function export12mPDF() {
     const pct = a.totaal > 0 ? a.oud12/a.totaal : 0;
     const pc = pillCls(pct);
 
-    // Doelstelling — gebaseerd op maandafbouw
+    // Doelstelling — gebaseerd op maandafbouw (4. gekleurde badge + 3. rijkleuring)
     const doel = doelen[a.nr];
-    let doelTekst = '—';
-    let doelKleur = '#94a3b8';
+    let badgeHtml = '<span style="color:#94a3b8">—</span>';
+    let rowBg = '';
     if (doel && doel.nettoPerMaand) {
       const target = doel.nettoPerMaand;
       if (mAfb === null) {
-        doelTekst = '— Geen data / '+fmtE(target);
-        doelKleur = '#92400e';
+        badgeHtml = '<span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">Geen data</span> <span style="color:#94a3b8;font-size:9px">doel: '+fmtE(target)+'</span>';
+        rowBg = '#fffbeb';
       } else if (mAfb >= target) {
-        doelTekst = '✓ Gehaald  '+fmtE(mAfb)+' / '+fmtE(target);
-        doelKleur = '#15803d';
+        badgeHtml = '<span style="background:#dcfce7;color:#15803d;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">✓ Gehaald</span> <span style="color:#15803d;font-size:9px">doel: '+fmtE(target)+'</span>';
+        rowBg = '#f0fdf4';
       } else if (mAfb < 0) {
-        doelTekst = '↑ Gestegen / '+fmtE(target);
-        doelKleur = '#991b1b';
+        badgeHtml = '<span style="background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">↑ Gestegen</span> <span style="color:#94a3b8;font-size:9px">doel: '+fmtE(target)+'</span>';
+        rowBg = '#fffbeb';
       } else if (mAfb === 0) {
-        doelTekst = '— Geen afbouw / '+fmtE(target);
-        doelKleur = '#92400e';
+        badgeHtml = '<span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">Geen afbouw</span> <span style="color:#94a3b8;font-size:9px">doel: '+fmtE(target)+'</span>';
+        rowBg = '#fffbeb';
       } else {
-        doelTekst = '⚠ €'+fmt(target-mAfb)+' tekort / '+fmtE(target);
-        doelKleur = '#92400e';
+        badgeHtml = '<span style="background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">⚠ €'+fmt(target-mAfb)+' tekort</span> <span style="color:#94a3b8;font-size:9px">doel: '+fmtE(target)+'</span>';
+        rowBg = '#fef2f2';
       }
     }
 
-    return '<tr>'
+    return '<tr style="background:'+rowBg+'">'
       +'<td style="padding:4px 8px;font-size:10px;color:#6b7394">'+a.nr+'</td>'
       +'<td style="padding:4px 8px;font-size:11px;font-weight:500">'+a.naam+'</td>'
-      +'<td style="padding:4px 8px;font-size:10px;text-align:right">'+fmtE(a.totaal)+'</td>'
-      +'<td style="padding:4px 8px;font-size:10px;text-align:right;font-weight:600">'+fmtE(a.oud12)+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;text-align:right;font-variant-numeric:tabular-nums">'+fmtE(a.totaal)+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">'+fmtE(a.oud12)+'</td>'
       +'<td style="padding:4px 8px;text-align:center"><span style="background:'+pc+';padding:1px 6px;border-radius:10px;font-size:10px;font-weight:600">'+fmtP(pct)+'</span></td>'
-      +'<td style="padding:4px 8px;font-size:10px;text-align:right;color:'+pijlKleur(dif)+'">'+pijl(dif)+'</td>'
-      +'<td style="padding:4px 8px;font-size:10px;text-align:right;color:'+pijlKleur(mAfb)+'">'+pijl(mAfb)+'</td>'
-      +'<td style="padding:4px 8px;font-size:10px;color:'+doelKleur+'">'+doelTekst+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;text-align:right;color:'+pijlKleur(dif)+';font-variant-numeric:tabular-nums">'+pijl(dif)+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;text-align:right;color:'+pijlKleur(mAfb)+';font-variant-numeric:tabular-nums">'+pijl(mAfb)+'</td>'
+      +'<td style="padding:4px 8px;font-size:10px;white-space:nowrap">'+badgeHtml+'</td>'
       +'</tr>';
   }).join('');
 
@@ -2441,14 +2441,30 @@ function export12mPDF() {
   const verschilKleur = verschilPDF !== null ? (verschilPDF >= 0 ? '#15803d' : '#991b1b') : '#94a3b8';
   const verschilTekst = verschilPDF !== null ? (verschilPDF >= 0 ? '✓ '+fmtE(verschilPDF)+' voor op doel' : '⚠ '+fmtE(Math.abs(verschilPDF))+' tekort op doel') : '—';
 
-  const samenvattingHtml = eersteVanMaand
-    ? '<div style="background:#eff6ff;border:1px solid #bfdbfe;padding:12px 16px;border-radius:6px;margin-bottom:16px;font-size:12px">'
-      +'<strong>📈 Overzicht:</strong> Begin maand: '+fmtE(beginTotaal)+' → Nu: '+fmtE(oud12tot)
-      +' → <span style="color:'+kleurV(maandAfgebouwd)+';font-weight:700">Afgebouwd: '+fmtE(maandAfgebouwd)+'</span>'
-      +(gemPerDag!==null?' → Gemiddeld per dag: <span style="color:'+kleurV(gemPerDag)+'">'+fmtE(gemPerDag)+'</span>' : '')
-      +(totDoelPDF>0?' → Totaal doel: '+fmtE(totDoelPDF)+' → <span style="color:'+verschilKleur+';font-weight:700">'+verschilTekst+'</span>' : '')
+  // 1. Legenda/uitlegblok
+  const legendaHtml = '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#1e3a6e;line-height:1.8">'
+    +'<strong>Wat is 12+ maanden voorraad?</strong> Artikelen die al meer dan 12 maanden op voorraad liggen en prioriteit hebben voor afbouw.<br>'
+    +'<strong>Maanddoel:</strong> Per afdeling is een streefbedrag vastgesteld dat deze maand afgebouwd moet worden.<br>'
+    +'<strong>Kleuren:</strong> &nbsp;'
+    +'<span style="background:#dcfce7;color:#15803d;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600">✓ Gehaald</span>&nbsp;'
+    +'<span style="background:#fee2e2;color:#991b1b;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600">Tekort</span>&nbsp;'
+    +'<span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600">Geen afbouw</span>'
+    +'</div>';
+
+  // 2. KPI-kaartjes (vervangt de lange samenvattingsregel)
+  const kpiKleur = (v) => v === null ? '#1e2340' : v >= 0 ? '#15803d' : '#991b1b';
+  const tekortBedrag = (verschilPDF !== null && verschilPDF < 0) ? Math.abs(verschilPDF) : 0;
+  const kpiHtml = eersteVanMaand
+    ? '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px">'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Begin maand</div><div style="font-size:14px;font-weight:700;font-family:monospace">'+fmtE(beginTotaal)+'</div></div>'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Huidig</div><div style="font-size:14px;font-weight:700;font-family:monospace">'+fmtE(oud12tot)+'</div></div>'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Afgebouwd</div><div style="font-size:14px;font-weight:700;font-family:monospace;color:'+kpiKleur(maandAfgebouwd)+'">'+fmtE(maandAfgebouwd)+'</div></div>'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Maanddoel</div><div style="font-size:14px;font-weight:700;font-family:monospace">'+(totDoelPDF>0?fmtE(totDoelPDF):'—')+'</div></div>'
+      +'<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Tekort op doel</div><div style="font-size:14px;font-weight:700;font-family:monospace;color:#991b1b">'+(totDoelPDF>0?fmtE(tekortBedrag):'—')+'</div></div>'
       +'</div>'
     : '';
+
+  const samenvattingHtml = legendaHtml + kpiHtml;
 
   const periodeStr = eersteVanMaand
     ? 'Periode: '+eersteVanMaand.datum+' t/m '+curr.datum+(dagen?' ('+dagen+' dagen)':'')+' · Vestiging 853'
@@ -2469,8 +2485,11 @@ function export12mPDF() {
     +samenvattingHtml
     +'<table><thead><tr>'
     +'<th>Nr</th><th>Afdeling</th><th class="r">Totale Waarde</th><th class="r">Waarde 12+ mnd</th>'
-    +'<th class="c">% Oudheid</th><th class="r">Afbouw gister</th><th class="r">Afgebouwd deze maand</th><th style="text-align:left">Vs. Doel</th>'
+    +'<th class="c">% Oudheid</th><th class="r">Afbouw gister</th><th class="r">Afgebouwd deze maand</th><th>Status vs. doel</th>'
     +'</tr></thead><tbody>'+rows+totRow+'</tbody></table>'
+    +'<div style="margin-top:10px;font-size:10px;color:#6b7394;display:flex;gap:16px;flex-wrap:wrap">'
+    +'<span>🟢 Doel gehaald</span><span>🔴 Tekort op doel</span><span>🟠 Geen afbouw deze maand</span>'
+    +'</div>'
     +'<div class="footer">Gegenereerd: '+new Date().toLocaleString('nl-NL')+'</div>'
     +'</body></html>');
   pw.document.close();
