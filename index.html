@@ -2141,6 +2141,15 @@ function renderPerformers(history) {
     document.querySelector('#tablePerformers'+tag+' tbody').innerHTML = results.map(a => {
       const pct = idx===0 ? a.pct3 : a.pct12;
       const s   = a.streak;
+      let dagenTekst = '';
+      if (s > 0 && history.length > s) {
+        const startTs = history[history.length - 1 - s].ts;
+        const endTs   = history[history.length - 1].ts;
+        if (startTs && endTs) {
+          const d = Math.round((endTs - startTs) / (1000*60*60*24));
+          if (d > 0) dagenTekst = '<br><span style="font-size:.72rem;color:var(--muted);font-family:var(--font)">'+d+' dagen</span>';
+        }
+      }
       const statusHtml = s===0
         ? '<span class="status ok">\u2713 Afbouw</span>'
         : s < DREMPEL
@@ -2148,7 +2157,7 @@ function renderPerformers(history) {
           : '<span class="status fail">\u2717 '+s+' uploads geen afbouw</span>';
       return '<tr><td class="name-col">'+a.naam+'</td><td>'+fmtE(a[key])+'</td>'
         +'<td><span class="pill '+pill(pct)+'">'+fmtP(pct)+'</span></td>'
-        +'<td style="font-family:var(--mono)">'+s+'</td>'
+        +'<td style="font-family:var(--mono)">'+s+dagenTekst+'</td>'
         +'<td>'+statusHtml+'</td></tr>';
     }).join('');
   });
