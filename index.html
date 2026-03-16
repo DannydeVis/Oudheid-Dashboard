@@ -84,7 +84,8 @@ tfoot td{font-weight:600;color:var(--text);border-top:1px solid var(--border);bo
 #table3m td:nth-child(5),#table12m td:nth-child(5){width:90px}
 #table3m td:nth-child(6),#table12m td:nth-child(6){width:130px}
 #table3m td:nth-child(7),#table12m td:nth-child(7){width:160px}
-#table12m td:nth-child(8){width:240px;text-align:left}
+#table12m td:nth-child(8){width:110px;text-align:center}
+#table12m td:nth-child(9){width:240px;text-align:left}
 /* 6. Vaste uitlijning geldbedragen 12m tabel */
 #table12m td:nth-child(3),#table12m td:nth-child(4),#table12m td:nth-child(6),#table12m td:nth-child(7){text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
 #table12m tfoot td:nth-child(3),#table12m tfoot td:nth-child(4),#table12m tfoot td:nth-child(6),#table12m tfoot td:nth-child(7){text-align:right}
@@ -427,6 +428,7 @@ tfoot td{font-weight:600;color:var(--text);border-top:1px solid var(--border);bo
           <th class="sortable" onclick="sortTable('table12m',4,'num')">% Oudheid</th>
           <th class="sortable" onclick="sortTable('table12m',5,'num')">Afbouw gister</th>
           <th class="sortable" onclick="sortTable('table12m',6,'num')">Afgebouwd deze maand</th>
+          <th class="sortable" onclick="sortTable('table12m',7,'num')">Prognose</th>
           <th style="text-align:left">Status vs. doel</th>
         </tr></thead>
         <tbody></tbody>
@@ -1107,6 +1109,30 @@ function renderMainTable(tableId, afds, oudFn, pctFn, prev, oudKey, tTot, tOud, 
       doelCell = '<td class="doel-cel">'+doelHtml+'</td>';
     }
 
+    // Prognose (alleen 12m)
+    let prognoseCell = '';
+    if (is12m) {
+      let prognoseHtml = '<span style="color:var(--muted)">—</span>';
+      let prognoseVal = '';
+      if (maandAfbouw !== null && _history && _history.length >= 2) {
+        const dagen = Math.max(1, Math.ceil((new Date(_history[_history.length-1].ts) - new Date(_history[0].ts)) / 86400000));
+        const gemDag = maandAfbouw / dagen;
+        if (gemDag > 0) {
+          const dagenRest = Math.round(oudFn(a) / gemDag);
+          const weken = Math.round(dagenRest / 7);
+          prognoseVal = dagenRest;
+          const tekst = dagenRest < 14 ? dagenRest+' dagen' : weken+' weken';
+          const kleur = dagenRest < 42 ? '#15803d' : dagenRest <= 84 ? '#92400e' : '#991b1b';
+          const bg    = dagenRest < 42 ? '#dcfce7'  : dagenRest <= 84 ? '#fef3c7'  : '#fee2e2';
+          prognoseHtml = '<span style="background:'+bg+';color:'+kleur+';padding:2px 9px;border-radius:20px;font-size:.75rem;font-weight:600;font-family:var(--mono)">'+tekst+'</span>';
+        } else {
+          prognoseVal = 99999;
+          prognoseHtml = '<span style="background:#fee2e2;color:#991b1b;padding:2px 9px;border-radius:20px;font-size:.75rem;font-weight:600">Geen afbouw</span>';
+        }
+      }
+      prognoseCell = '<td data-v="'+prognoseVal+'" style="text-align:center">'+prognoseHtml+'</td>';
+    }
+
     return '<tr class="'+rowClass+'">'
       +'<td class="nr-col">'+a.nr+'</td>'
       +'<td class="name-col">'+a.naam+'</td>'
@@ -1115,6 +1141,7 @@ function renderMainTable(tableId, afds, oudFn, pctFn, prev, oudKey, tTot, tOud, 
       +'<td data-v="'+pctFn(a)+'"><span class="pill '+(is12m?pill12(pctFn(a)):pill(pctFn(a)))+'">'+fmtP(pctFn(a))+'</span></td>'
       +'<td data-v="'+(dif!==null?dif:'')+'">'+dc(dif)+'</td>'
       +maandCell
+      +prognoseCell
       +doelCell
       +'</tr>';
   }).join('');
