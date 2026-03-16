@@ -1115,7 +1115,12 @@ function renderMainTable(tableId, afds, oudFn, pctFn, prev, oudKey, tTot, tOud, 
     if (is12m) {
       let prognoseHtml = '<span style="color:var(--muted)">—</span>';
       let prognoseVal = '';
-      if (maandAfbouw !== null && _history && _history.length >= 2) {
+      const doel = doelen[a.nr];
+      const doelGehaald = doel && doel.nettoPerMaand && maandAfbouw !== null && maandAfbouw >= doel.nettoPerMaand;
+      if (doelGehaald) {
+        prognoseVal = 0;
+        prognoseHtml = '<span style="background:#dcfce7;color:#15803d;padding:2px 9px;border-radius:20px;font-size:.75rem;font-weight:700">✓ Behaald</span>';
+      } else if (maandAfbouw !== null && _history && _history.length >= 2) {
         const dagen = Math.max(1, Math.ceil((new Date(_history[_history.length-1].ts) - new Date(_history[0].ts)) / 86400000));
         const gemDag = maandAfbouw / dagen;
         if (gemDag > 0) {
