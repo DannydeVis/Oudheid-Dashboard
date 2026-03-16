@@ -229,6 +229,61 @@ tfoot td{font-weight:600;color:var(--text);border-top:1px solid var(--border);bo
 
 @media(max-width:1000px){.kpi-strip{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:700px){.kpi-strip{grid-template-columns:repeat(2,1fr)}.chart-grid{grid-template-columns:1fr}.bar-name{min-width:120px}}
+
+/* ── Mobiel ──────────────────────────────────────────────── */
+@media(max-width:600px){
+  /* Topbar */
+  .topbar{padding:10px 14px;gap:8px}
+  .topbar-brand h1{font-size:.85rem}
+  .topbar-right{gap:6px}
+  .topbar-date{display:none}
+  .btn-sm{padding:5px 10px;font-size:.75rem}
+
+  /* Upload scherm: scrollbaar i.p.v. gecentreerd */
+  #upload-screen{justify-content:flex-start;padding:20px 16px;gap:0;min-height:calc(100vh - 49px)}
+
+  /* Open Dashboard knop bovenaan zetten op mobiel */
+  #openDashboardBtn{order:-1;margin-top:0 !important;margin-bottom:16px;width:100%;font-size:.95rem !important;padding:14px 20px !important}
+  #historyHint{order:-2;margin-top:0;margin-bottom:0}
+  .upload-label{margin-bottom:16px}
+
+  /* Dropzone kleiner op mobiel */
+  .dropzone{padding:28px 20px}
+  .drop-icon{font-size:2rem;margin-bottom:10px}
+  .dropzone h2{font-size:1rem}
+
+  /* KPI strip */
+  .kpi-strip{grid-template-columns:repeat(2,1fr)}
+  .kpi{padding:14px 16px}
+  .kpi-value{font-size:1.2rem}
+
+  /* Tabs */
+  .tabs{padding:0 8px}
+  .tab{padding:12px 12px;font-size:.78rem}
+  .tab-pane{padding:16px 14px}
+
+  /* Tabellen */
+  .table-wrap{border-radius:6px}
+  th,td{padding:7px 10px;font-size:.75rem}
+
+  /* Bottom bar */
+  .bottom-bar{padding:12px 14px;gap:8px}
+  .btn{padding:8px 14px;font-size:.8rem}
+
+  /* Modals */
+  .modal-box{width:100%;max-width:100vw;max-height:92vh;border-radius:14px 14px 0 0;position:fixed;bottom:0}
+  .modal-overlay{align-items:flex-end}
+
+  /* Charts */
+  .kpi12m-strip{grid-template-columns:repeat(2,1fr)}
+
+  /* Voortgang rijen */
+  .voortgang-rij{grid-template-columns:1fr 1fr;gap:8px}
+  .voortgang-rij .vr-naam,.voortgang-rij .vr-balk-wrap{grid-column:1/-1}
+
+  /* Manager grid */
+  .manager-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+}
 /* ── 12m verbeteringen ────────────────────────────────── */
 .legenda-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 18px;margin-bottom:18px;font-size:.83rem;color:#1e3a6e;line-height:1.8}
 .legenda-box strong{font-weight:600}
