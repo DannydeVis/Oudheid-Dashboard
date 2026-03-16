@@ -457,7 +457,7 @@ tfoot td{font-weight:600;color:var(--text);border-top:1px solid var(--border);bo
         <div class="section-title">Geen of weinig afbouw &mdash; 3+ maanden</div>
         <div class="table-wrap">
           <table id="tablePerformers3">
-            <thead><tr><th>Afdeling</th><th>Waarde 3+ mnd</th><th>% Oudheid</th><th>Uploads zonder afbouw</th><th>Status</th></tr></thead>
+            <thead><tr><th>Afdeling</th><th>Waarde 3+ mnd</th><th>% Oudheid</th><th>Keer geen afbouw</th><th>Status</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -466,13 +466,13 @@ tfoot td{font-weight:600;color:var(--text);border-top:1px solid var(--border);bo
         <div class="section-title">Geen of weinig afbouw &mdash; 12+ maanden</div>
         <div class="table-wrap">
           <table id="tablePerformers12">
-            <thead><tr><th>Afdeling</th><th>Waarde 12+ mnd</th><th>% Oudheid</th><th>Uploads zonder afbouw</th><th>Status</th></tr></thead>
+            <thead><tr><th>Afdeling</th><th>Waarde 12+ mnd</th><th>% Oudheid</th><th>Keer geen afbouw</th><th>Status</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
       </div>
     </div>
-    <div class="info-box">&#128161; <strong>Geen afbouw</strong> = waarde gelijk of gestegen t.o.v. vorige upload. <strong>Uploads zonder afbouw</strong> telt hoe vaak achter elkaar er geen daling was. Waarschuwing na 3 uploads.</div>
+    <div class="info-box">&#128161; <strong>Geen afbouw</strong> = waarde gelijk of gestegen t.o.v. vorige meting. <strong>Keer geen afbouw</strong> telt hoe vaak achter elkaar er geen daling was. Waarschuwing na 3 keer.</div>
   </div>
 
   <div id="pane-notities" class="tab-pane">
@@ -2153,8 +2153,8 @@ function renderPerformers(history) {
       const statusHtml = s===0
         ? '<span class="status ok">\u2713 Afbouw</span>'
         : s < DREMPEL
-          ? '<span class="status warn">\u26a0 '+s+' upload'+(s>1?'s':'')+' geen afbouw'+dagenSuffix+'</span>'
-          : '<span class="status fail">\u2717 '+s+' uploads geen afbouw'+dagenSuffix+'</span>';
+          ? '<span class="status warn">\u26a0 '+s+'x geen afbouw'+dagenSuffix+'</span>'
+          : '<span class="status fail">\u2717 '+s+'x geen afbouw'+dagenSuffix+'</span>';
       return '<tr><td class="name-col">'+a.naam+'</td><td>'+fmtE(a[key])+'</td>'
         +'<td><span class="pill '+pill(pct)+'">'+fmtP(pct)+'</span></td>'
         +'<td style="font-family:var(--mono)">'+s+'</td>'
@@ -2178,7 +2178,7 @@ function checkDrempels(afdelingen, doelen, history) {
         if (hC.oud3 >= hP.oud3) streak++; else break;
       }
       if (streak >= DREMPEL) {
-        const msg = a.naam+': '+streak+' uploads geen afbouw';
+        const msg = a.naam+': '+streak+'x geen afbouw';
         if (!alerts.find(x => x.startsWith(a.naam))) alerts.push(msg);
       }
     });
