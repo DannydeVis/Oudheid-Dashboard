@@ -5,27 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Voorraad Oudheid Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, deleteField, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCMB6LBx7t0UchIgUhwTtfEau5b_ncRgwk",
-  authDomain: "oudheid-dashboard.firebaseapp.com",
-  projectId: "oudheid-dashboard",
-  storageBucket: "oudheid-dashboard.firebasestorage.app",
-  messagingSenderId: "1067140324529",
-  appId: "1:1067140324529:web:0099023933ca540e80d690",
-  measurementId: "G-TVBCQZL4D7"
-};
-
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
-
-window._fb = { db, doc, getDoc, setDoc, deleteField, updateDoc };
-window._fbReady = true;
-window.dispatchEvent(new Event('firebase-ready'));
-</script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f4f6fb;--surface:#fff;--surface2:#f0f2f8;--border:#dde1ef;--accent:#2563eb;--accent2:#ea580c;--warn:#d97706;--danger:#dc2626;--success:#16a34a;--text:#1e2340;--muted:#6b7394;--font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;--shadow:0 1px 3px rgba(30,35,64,.08),0 4px 16px rgba(30,35,64,.06)}
@@ -545,40 +524,13 @@ const NOTIT_KEY = 'voorraad_notities_v1';
 const ARTIKEL_KEY = 'artikelen_data_v1';
 const DREMPEL   = 3;
 
-// ── In-memory cache (gevuld vanuit Firestore bij opstarten) ──
 let _cache = { history: [], doelen: {}, notities: {}, artikelen: null };
 
-async function fbDoc() {
-  return window._fb.doc(window._fb.db, 'data', 'dashboard');
-}
-
-async function loadAllFromFirestore() {
-  try {
-    const ref  = await fbDoc();
-    const snap = await window._fb.getDoc(ref);
-    if (snap.exists()) {
-      const d = snap.data();
-      _cache.history   = d.history   || [];
-      _cache.doelen    = d.doelen    || {};
-      _cache.notities  = d.notities  || {};
-      _cache.artikelen = d.artikelen || null;
-    }
-  } catch(e) {
-    console.warn('Firebase laden mislukt, terugvallen op localStorage:', e);
-    _cache.history   = JSON.parse(localStorage.getItem(STORE_KEY)  || '[]');
-    _cache.doelen    = JSON.parse(localStorage.getItem(DOEL_KEY)   || '{}');
-    _cache.notities  = JSON.parse(localStorage.getItem(NOTIT_KEY)  || '{}');
-    _cache.artikelen = JSON.parse(localStorage.getItem(ARTIKEL_KEY)|| 'null');
-  }
-}
-
-async function saveToFirestore(field, value) {
-  try {
-    const ref = await fbDoc();
-    await window._fb.setDoc(ref, { [field]: value }, { merge: true });
-  } catch(e) {
-    console.warn('Firebase opslaan mislukt:', e);
-  }
+function loadAllFromLocalStorage() {
+  _cache.history   = JSON.parse(localStorage.getItem(STORE_KEY)   || '[]');
+  _cache.doelen    = JSON.parse(localStorage.getItem(DOEL_KEY)    || '{}');
+  _cache.notities  = JSON.parse(localStorage.getItem(NOTIT_KEY)   || '{}');
+  _cache.artikelen = JSON.parse(localStorage.getItem(ARTIKEL_KEY) || 'null');
 }
 
 const fmt  = n => Math.round(n).toLocaleString('nl-NL');
@@ -600,10 +552,10 @@ function dc(diff) {
   return '<span class="delta-zero">\u2014</span>';
 }
 function loadHistory()  { return _cache.history; }
-function saveHistory(h) { _cache.history = h; localStorage.setItem(STORE_KEY, JSON.stringify(h)); saveToFirestore('history', h); }
+function saveHistory(h) { _cache.history = h; localStorage.setItem(STORE_KEY, JSON.stringify(h)); }
 
 function loadArtikelen() { return _cache.artikelen; }
-function saveArtikelen(data) { _cache.artikelen = data; localStorage.setItem(ARTIKEL_KEY, JSON.stringify(data)); saveToFirestore('artikelen', data); }
+function saveArtikelen(data) { _cache.artikelen = data; localStorage.setItem(ARTIKEL_KEY, JSON.stringify(data)); }
 
 function handleArtikelUploadManager(input) {
   const file = input.files[0];
@@ -718,7 +670,7 @@ function handleArtikelUploadManager(input) {
 function verwijderArtikelData() {
   if (confirm('Weet je zeker dat je de artikel data wilt verwijderen?')) {
     _cache.artikelen = null;
-    saveToFirestore('artikelen', null);
+    localStorage.removeItem(ARTIKEL_KEY);
     if (_history && _history.length > 0) {
       renderDashboard(_history);
     }
@@ -727,17 +679,12 @@ function verwijderArtikelData() {
 
 
 function loadDoelen()   { return _cache.doelen; }
-function saveDoelen(d)  { _cache.doelen = d;   localStorage.setItem(DOEL_KEY,  JSON.stringify(d)); saveToFirestore('doelen', d); }
+function saveDoelen(d)  { _cache.doelen = d;   localStorage.setItem(DOEL_KEY,  JSON.stringify(d)); }
 function loadNotities() { return _cache.notities; }
-function saveNotities(n){ _cache.notities = n; localStorage.setItem(NOTIT_KEY, JSON.stringify(n)); saveToFirestore('notities', n); }
+function saveNotities(n){ _cache.notities = n; localStorage.setItem(NOTIT_KEY, JSON.stringify(n)); }
 
-async function initApp() {
-  // Wacht op Firebase SDK initialisatie
-  if (!window._fbReady) {
-    await new Promise(resolve => window.addEventListener('firebase-ready', resolve, { once: true }));
-  }
-  // Laad alle data vanuit Firestore
-  await loadAllFromFirestore();
+function initApp() {
+  loadAllFromLocalStorage();
 
   document.getElementById('btnReset').addEventListener('click', () => {
     if (!confirm('Alle opgeslagen data verwijderen?')) return;
@@ -746,10 +693,6 @@ async function initApp() {
     localStorage.removeItem(DOEL_KEY);
     localStorage.removeItem(NOTIT_KEY);
     localStorage.removeItem(ARTIKEL_KEY);
-    saveToFirestore('history', []);
-    saveToFirestore('doelen', {});
-    saveToFirestore('notities', {});
-    saveToFirestore('artikelen', null);
     _history = null;
     document.getElementById('dashboard').style.display = 'none';
     document.getElementById('upload-screen').style.display = 'flex';
