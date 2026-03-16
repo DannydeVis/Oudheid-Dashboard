@@ -600,10 +600,10 @@ function dc(diff) {
   return '<span class="delta-zero">\u2014</span>';
 }
 function loadHistory()  { return _cache.history; }
-function saveHistory(h) { _cache.history = h; saveToFirestore('history', h); }
+function saveHistory(h) { _cache.history = h; localStorage.setItem(STORE_KEY, JSON.stringify(h)); saveToFirestore('history', h); }
 
 function loadArtikelen() { return _cache.artikelen; }
-function saveArtikelen(data) { _cache.artikelen = data; saveToFirestore('artikelen', data); }
+function saveArtikelen(data) { _cache.artikelen = data; localStorage.setItem(ARTIKEL_KEY, JSON.stringify(data)); saveToFirestore('artikelen', data); }
 
 function handleArtikelUploadManager(input) {
   const file = input.files[0];
@@ -727,9 +727,9 @@ function verwijderArtikelData() {
 
 
 function loadDoelen()   { return _cache.doelen; }
-function saveDoelen(d)  { _cache.doelen = d;   saveToFirestore('doelen', d); }
+function saveDoelen(d)  { _cache.doelen = d;   localStorage.setItem(DOEL_KEY,  JSON.stringify(d)); saveToFirestore('doelen', d); }
 function loadNotities() { return _cache.notities; }
-function saveNotities(n){ _cache.notities = n; saveToFirestore('notities', n); }
+function saveNotities(n){ _cache.notities = n; localStorage.setItem(NOTIT_KEY, JSON.stringify(n)); saveToFirestore('notities', n); }
 
 async function initApp() {
   // Wacht op Firebase SDK initialisatie
@@ -742,6 +742,10 @@ async function initApp() {
   document.getElementById('btnReset').addEventListener('click', () => {
     if (!confirm('Alle opgeslagen data verwijderen?')) return;
     _cache = { history: [], doelen: {}, notities: {}, artikelen: null };
+    localStorage.removeItem(STORE_KEY);
+    localStorage.removeItem(DOEL_KEY);
+    localStorage.removeItem(NOTIT_KEY);
+    localStorage.removeItem(ARTIKEL_KEY);
     saveToFirestore('history', []);
     saveToFirestore('doelen', {});
     saveToFirestore('notities', {});
@@ -751,6 +755,7 @@ async function initApp() {
     document.getElementById('upload-screen').style.display = 'flex';
     document.getElementById('topbarDate').textContent = '\u2014';
     document.getElementById('historyHint').style.display = 'none';
+    document.getElementById('openDashboardBtn').style.display = 'none';
     document.getElementById('errorBar').style.display = 'none';
     document.getElementById('alertBar').className = 'alert-bar';
     document.getElementById('fileInput').value = '';
