@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Voorraad Oudheid Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f4f6fb;--surface:#fff;--surface2:#f0f2f8;--border:#dde1ef;--accent:#2563eb;--accent2:#ea580c;--warn:#d97706;--danger:#dc2626;--success:#16a34a;--text:#1e2340;--muted:#6b7394;--font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;--shadow:0 1px 3px rgba(30,35,64,.08),0 4px 16px rgba(30,35,64,.06)}
@@ -506,7 +505,6 @@ tfoot td{font-weight:600;color:var(--text);border-top:1px solid var(--border);bo
     <button class="btn ghost2" onclick="exportExcel()">&#8595; Volledige export</button>
 
     <button class="btn ghost2" onclick="openBeheer()">&#128193; Beheer uploads</button>
-    <button class="btn ghost2" onclick="maakScreenshot()">&#128247; Screenshot</button>
     <button class="btn ghost2" onclick="exportBackup()">&#128190; Backup</button>
     <button class="btn ghost2" onclick="document.getElementById('restoreInput').click()">&#128194; Herstel backup</button>
     <input type="file" id="restoreInput" accept=".json" style="display:none" onchange="importBackup(this)">
@@ -2889,68 +2887,6 @@ function importBackup(input) {
   input.value = '';
 }
 
-// ══════════════════════════════════════════════════════════
-// SCREENSHOT
-// ══════════════════════════════════════════════════════════
-function maakScreenshot() {
-  const btn = event.target.closest('button');
-  const origTekst = btn.innerHTML;
-  btn.innerHTML = '⏳ Bezig...';
-  btn.disabled = true;
-
-  // Verberg knoppen en bottom-bar tijdens screenshot
-  const bottomBar = document.querySelector('.bottom-bar');
-  const topbarRight = document.querySelector('.topbar-right');
-  bottomBar.style.display = 'none';
-  topbarRight.style.visibility = 'hidden';
-
-  const dashboard = document.getElementById('dashboard');
-  const topbar = document.querySelector('.topbar');
-
-  // Maak een wrapper voor de screenshot
-  const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:absolute;left:-9999px;top:0;width:1400px;background:#f4f6fb';
-  document.body.appendChild(wrapper);
-
-  // Kloon topbar + dashboard
-  wrapper.appendChild(topbar.cloneNode(true));
-  const dashClone = dashboard.cloneNode(true);
-  wrapper.appendChild(dashClone);
-
-  // Verberg bottom-bar en verborgen tabs in kloon
-  const cloneBottom = wrapper.querySelector('.bottom-bar');
-  if (cloneBottom) cloneBottom.style.display = 'none';
-  const cloneTopRight = wrapper.querySelector('.topbar-right');
-  if (cloneTopRight) cloneTopRight.style.display = 'none';
-
-  html2canvas(wrapper, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: '#f4f6fb',
-    width: 1400,
-    windowWidth: 1400
-  }).then(canvas => {
-    wrapper.remove();
-    bottomBar.style.display = '';
-    topbarRight.style.visibility = '';
-    btn.innerHTML = origTekst;
-    btn.disabled = false;
-
-    // Download als PNG
-    const link = document.createElement('a');
-    const datum = document.getElementById('topbarDate').textContent || 'dashboard';
-    link.download = 'dashboard-screenshot-' + datum.replace(/[\s\/]/g, '-') + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  }).catch(err => {
-    wrapper.remove();
-    bottomBar.style.display = '';
-    topbarRight.style.visibility = '';
-    btn.innerHTML = origTekst;
-    btn.disabled = false;
-    alert('Screenshot mislukt: ' + err.message);
-  });
-}
 </script>
 </body>
 </html>
