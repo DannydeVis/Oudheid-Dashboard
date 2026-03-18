@@ -1356,7 +1356,7 @@ function berekenGemiddeldeAfbouw(history, nr, aantalMaanden = 3) {
 
 // ── Render nieuwe doelen tab ──────────────────────────────
 function renderDoelstellingenNieuw(afdelingen, doelen, datum, history) {
-  const huidigeMaand = new Date(datum);
+  const huidigeMaand = new Date(history[history.length-1].ts);
   const maandenTotEind = (EINDDOEL_DATUM.getFullYear() - huidigeMaand.getFullYear()) * 12
                        + (EINDDOEL_DATUM.getMonth() - huidigeMaand.getMonth());
 
@@ -1455,9 +1455,8 @@ function renderDoelstellingenNieuw(afdelingen, doelen, datum, history) {
 
 function autoDoelen() {
   if (!_history) return;
-  const datum = _history[_history.length-1].datum;
-  const huidigeMaand = new Date(datum);
-  const maandenTotEind = (EINDDOEL_DATUM.getFullYear() - huidigeMaand.getFullYear()) * 12 
+  const huidigeMaand = new Date(_history[_history.length-1].ts);
+  const maandenTotEind = (EINDDOEL_DATUM.getFullYear() - huidigeMaand.getFullYear()) * 12
                        + (EINDDOEL_DATUM.getMonth() - huidigeMaand.getMonth());
   
   _history[_history.length-1].afdelingen.forEach(a => {
@@ -1567,52 +1566,61 @@ function exportDoelenPDF() {
     alert('Je hebt minimaal 2 uploads nodig');
     return;
   }
-  
+
   const curr = _history[_history.length - 1];
-  const prev = _history[_history.length - 2];
+  const eersteVanMaand = _history[0];
   const datum = curr.datum;
   const doelen = loadDoelen();
-  
+
+  // Bouw beginMap net als in het tabblad
+  const beginMap = {};
+  eersteVanMaand.afdelingen.forEach(a => { if (a.oud12 > 0) beginMap[a.nr] = a.oud12; });
+
   const relevant = curr.afdelingen.filter(a => a.oud12 > 0).sort((a,b) => parseInt(a.nr) - parseInt(b.nr));
-  
+
   let opSchema = 0, tekort = 0, gestegen = 0;
   let totHuidig = 0, totAfbouw = 0, totDoel = 0;
-  
+
   const rows = relevant.map(a => {
-    const nettoAfbouw = berekenNettoAfbouw(curr, prev, a.nr);
+    const maandAfbouw = beginMap[a.nr] !== undefined ? beginMap[a.nr] - a.oud12 : null;
     const doel = doelen[a.nr];
     const doelWaarde = doel && doel.nettoPerMaand ? doel.nettoPerMaand : null;
-    
+
     totHuidig += a.oud12;
-    if (nettoAfbouw !== null) totAfbouw += nettoAfbouw;
+    if (maandAfbouw !== null) totAfbouw += maandAfbouw;
     if (doelWaarde) totDoel += doelWaarde;
-    
+
     let statusHtml = '<span style="color:#94a3b8">—</span>';
     let rowBg = '';
-    
-    if (doelWaarde && nettoAfbouw !== null) {
-      if (nettoAfbouw >= doelWaarde) {
+
+    if (doelWaarde && maandAfbouw !== null) {
+      if (maandAfbouw >= doelWaarde) {
         statusHtml = '<span style="color:#16a34a;font-weight:700">✓ Gehaald</span>';
         rowBg = '#f0fdf4';
         opSchema++;
-      } else if (nettoAfbouw < 0) {
+      } else if (maandAfbouw < 0) {
         statusHtml = '<span style="color:#dc2626;font-weight:700">✗ Gestegen</span>';
         rowBg = '#fef2f2';
         gestegen++;
+      } else if (maandAfbouw === 0) {
+        statusHtml = '<span style="color:#f59e0b;font-weight:700">— Geen afbouw</span>';
+        rowBg = '#fffbeb';
+        tekort++;
       } else {
-        statusHtml = '<span style="color:#f59e0b;font-weight:700">⚠ Tekort</span>';
+        statusHtml = '<span style="color:#f59e0b;font-weight:700">⚠ €'+fmt(doelWaarde-maandAfbouw)+' tekort</span>';
         rowBg = '#fffbeb';
         tekort++;
       }
     }
-    
-    return '<tr style="background:'+rowBg+'"><td style="padding:6px 10px;font-size:11px">'+a.nr+'</td><td style="padding:6px 10px;font-size:12px">'+a.naam+'</td><td style="padding:6px 10px;font-size:11px;text-align:right">'+fmtE(a.oud12)+'</td><td style="padding:6px 10px;font-size:11px;text-align:right;font-weight:600;color:'+(nettoAfbouw!==null&&nettoAfbouw>=0?'#16a34a':'#dc2626')+'">'+(nettoAfbouw!==null?fmtE(nettoAfbouw):'—')+'</td><td style="padding:6px 10px;font-size:11px;text-align:right">'+(doelWaarde?fmtE(doelWaarde):'—')+'</td><td style="padding:6px 10px;font-size:12px;text-align:center">'+statusHtml+'</td></tr>';
+
+    const afbouwKleur = maandAfbouw !== null && maandAfbouw >= 0 ? '#16a34a' : '#dc2626';
+    return '<tr style="background:'+rowBg+'"><td style="padding:6px 10px;font-size:11px">'+a.nr+'</td><td style="padding:6px 10px;font-size:12px">'+a.naam+'</td><td style="padding:6px 10px;font-size:11px;text-align:right">'+fmtE(a.oud12)+'</td><td style="padding:6px 10px;font-size:11px;text-align:right;font-weight:600;color:'+afbouwKleur+'">'+(maandAfbouw!==null?fmtE(maandAfbouw):'—')+'</td><td style="padding:6px 10px;font-size:11px;text-align:right">'+(doelWaarde?fmtE(doelWaarde):'—')+'</td><td style="padding:6px 10px;font-size:12px;text-align:center">'+statusHtml+'</td></tr>';
   }).join('');
-  
+
   const totaalRow = '<tr style="background:#fffbeb;border-top:2px solid #d97706"><td colspan="2" style="padding:8px 10px;font-weight:700">Totaal</td><td style="padding:8px 10px;font-size:12px;text-align:right;font-weight:700">'+fmtE(totHuidig)+'</td><td style="padding:8px 10px;font-size:12px;text-align:right;font-weight:700;color:'+(totAfbouw>0?'#16a34a':'#dc2626')+'">'+fmtE(totAfbouw)+'</td><td style="padding:8px 10px;font-size:12px;text-align:right;font-weight:700">'+fmtE(totDoel)+'</td><td></td></tr>';
-  
+
   const pw = window.open('','_blank','width=1200,height=900');
-  pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Doelstellingen '+datum+'</title><style>*{margin:0;padding:0}body{font-family:Calibri,Arial;padding:20px}@page{margin:15mm}.header{background:#0f2b5b;color:white;padding:18px;border-radius:8px;margin-bottom:16px}.header h1{font-size:18px}.header .sub{font-size:11px;opacity:.8}.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}.kpi-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px;text-align:center}.kpi-val{font-size:20px;font-weight:700}.kpi-val.ok{color:#16a34a}.kpi-val.warn{color:#f59e0b}.kpi-val.fail{color:#dc2626}table{width:100%;border-collapse:collapse;font-size:11px}th{background:#0f2b5b;color:white;padding:8px 10px;font-size:10px}th.r{text-align:right}td{border-bottom:1px solid #e2e8f0}.footer{margin-top:16px;font-size:10px;text-align:center}.print-btn{position:fixed;bottom:20px;right:20px;background:#2563eb;color:white;border:none;padding:12px 24px;border-radius:8px;cursor:pointer}@media print{.print-btn{display:none}}</style></head><body><div class="header"><h1>📊 Doelstellingen Rapport</h1><div class="sub">'+datum+' · Vestiging 853</div></div><div class="kpi-row"><div class="kpi-box"><div style="font-size:10px;margin-bottom:6px">OP SCHEMA</div><div class="kpi-val ok">'+opSchema+'</div></div><div class="kpi-box"><div style="font-size:10px;margin-bottom:6px">TEKORT</div><div class="kpi-val warn">'+tekort+'</div></div><div class="kpi-box"><div style="font-size:10px;margin-bottom:6px">GESTEGEN</div><div class="kpi-val fail">'+gestegen+'</div></div></div><table><thead><tr><th>Nr</th><th>Afdeling</th><th class="r">Huidig 12+</th><th class="r">Netto afbouw</th><th class="r">Doelstelling</th><th style="text-align:center">Status</th></tr></thead><tbody>'+rows+totaalRow+'</tbody></table><div class="footer">Gegenereerd: '+new Date().toLocaleString('nl-NL')+'</div><button class="print-btn" onclick="window.print()">🖨 Afdrukken</button></body></html>');
+  pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Doelstellingen '+datum+'</title><style>*{margin:0;padding:0}body{font-family:Calibri,Arial;padding:20px}@page{margin:15mm}.header{background:#0f2b5b;color:white;padding:18px;border-radius:8px;margin-bottom:16px}.header h1{font-size:18px}.header .sub{font-size:11px;opacity:.8;margin-top:4px}.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}.kpi-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px;text-align:center}.kpi-val{font-size:20px;font-weight:700}.kpi-val.ok{color:#16a34a}.kpi-val.warn{color:#f59e0b}.kpi-val.fail{color:#dc2626}table{width:100%;border-collapse:collapse;font-size:11px}th{background:#0f2b5b;color:white;padding:8px 10px;font-size:10px}th.r{text-align:right}td{border-bottom:1px solid #e2e8f0}.footer{margin-top:16px;font-size:10px;text-align:center;color:#94a3b8}</style></head><body><div class="header"><h1>Doelstellingen Rapport</h1><div class="sub">Periode: '+eersteVanMaand.datum+' t/m '+datum+' · Vestiging 853</div></div><div class="kpi-row"><div class="kpi-box"><div style="font-size:10px;margin-bottom:6px">OP SCHEMA</div><div class="kpi-val ok">'+opSchema+'</div></div><div class="kpi-box"><div style="font-size:10px;margin-bottom:6px">TEKORT</div><div class="kpi-val warn">'+tekort+'</div></div><div class="kpi-box"><div style="font-size:10px;margin-bottom:6px">GESTEGEN</div><div class="kpi-val fail">'+gestegen+'</div></div></div><table><thead><tr><th>Nr</th><th>Afdeling</th><th class="r">Huidig 12+</th><th class="r">Afgebouwd deze maand</th><th class="r">Doelstelling</th><th style="text-align:center">Status</th></tr></thead><tbody>'+rows+totaalRow+'</tbody></table><div class="footer">Gegenereerd: '+new Date().toLocaleString('nl-NL')+'</div></body></html>');
   pw.document.close();
 }
 
