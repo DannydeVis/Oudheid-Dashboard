@@ -1120,6 +1120,12 @@ function renderMainTable(tableId, afds, oudFn, pctFn, prev, oudKey, tTot, tOud, 
       let prognoseVal = '';
       const doel = doelen[a.nr];
       const doelGehaald = doel && doel.nettoPerMaand && maandAfbouw !== null && maandAfbouw >= doel.nettoPerMaand;
+
+      // Bereken resterende dagen in de huidige maand
+      const currTs = _history && _history.length ? new Date(_history[_history.length-1].ts) : new Date();
+      const eindVanMaand = new Date(currTs.getFullYear(), currTs.getMonth()+1, 0);
+      const dagenTotEindMaand = Math.max(0, Math.ceil((eindVanMaand - currTs) / 86400000));
+
       if (doelGehaald) {
         prognoseVal = 0;
         prognoseHtml = '<span style="background:#dcfce7;color:#15803d;padding:2px 9px;border-radius:20px;font-size:.75rem;font-weight:700">✓ Behaald</span>';
@@ -1131,8 +1137,10 @@ function renderMainTable(tableId, afds, oudFn, pctFn, prev, oudKey, tTot, tOud, 
           const weken = Math.round(dagenRest / 7);
           prognoseVal = dagenRest;
           const tekst = dagenRest < 14 ? dagenRest+' dagen' : weken+' weken';
-          const kleur = dagenRest < 42 ? '#15803d' : dagenRest <= 84 ? '#92400e' : '#991b1b';
-          const bg    = dagenRest < 42 ? '#dcfce7'  : dagenRest <= 84 ? '#fef3c7'  : '#fee2e2';
+          // Groen als afbouw klaar is binnen resterende maanddagen, anders rood
+          const opTijd = dagenRest <= dagenTotEindMaand;
+          const kleur = opTijd ? '#15803d' : '#991b1b';
+          const bg    = opTijd ? '#dcfce7'  : '#fee2e2';
           prognoseHtml = '<span style="background:'+bg+';color:'+kleur+';padding:2px 9px;border-radius:20px;font-size:.75rem;font-weight:600;font-family:var(--mono)">'+tekst+'</span>';
         } else {
           prognoseVal = 99999;
