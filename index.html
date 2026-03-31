@@ -1205,7 +1205,7 @@ function renderMainTable(tableId, afds, oudFn, pctFn, prev, oudKey, tTot, tOud, 
     document.getElementById('t12-doel').innerHTML = '<span style="color:'+vKleur+';font-weight:600;font-size:.8rem">'+vTekst+'</span>';
     // 2. KPI-kaarten vullen
     const totAfgebouwdMaand = totBeginMaand - oudTot;
-    const tekortKaart = totDoel > 0 ? Math.max(0, totDoel - totAfgebouwdMaand) : null;
+    const tekortKaart = totDoel > 0 ? Math.max(0, totDoel - totAfbouwDoel) : null;
     const setKC = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     setKC('kc-begin',      totBeginMaand > 0 ? fmtE(totBeginMaand) : '—');
     setKC('kc-huidig',     fmtE(oudTot));
