@@ -818,18 +818,19 @@ function renderDashboard(history) {
   const afgebouwdMaand12m = history.length >= 2 ? beginTotaal12m - oud12tot : null;
 
   // Doelstellingen totalen
-  let totMaanddoel = 0, aantalMetDoel = 0, aantalOpSchema = 0;
+  let totMaanddoel = 0, aantalMetDoel = 0, aantalOpSchema = 0, afgebouwdMetDoel = 0, heeftBeginDataMetDoel = false;
   afdelingen.filter(a => a.oud12 > 0).forEach(a => {
     const d = doelen[a.nr];
     if (d && d.nettoPerMaand) {
       totMaanddoel += d.nettoPerMaand;
       aantalMetDoel++;
       const afb = beginMap12mKpi[a.nr] !== undefined ? beginMap12mKpi[a.nr] - a.oud12 : null;
+      if (afb !== null) { afgebouwdMetDoel += afb; heeftBeginDataMetDoel = true; }
       if (afb !== null && afb >= d.nettoPerMaand) aantalOpSchema++;
     }
   });
-  const tekortDoel = (afgebouwdMaand12m !== null && totMaanddoel > 0)
-    ? Math.max(0, totMaanddoel - afgebouwdMaand12m) : null;
+  const tekortDoel = (heeftBeginDataMetDoel && totMaanddoel > 0)
+    ? Math.max(0, totMaanddoel - afgebouwdMetDoel) : null;
 
   // ── Vul KPI-kaartjes ──────────────────────────────────────
   // 1. Totale 12+ voorraad
@@ -2904,5 +2905,6 @@ function importBackup(input) {
 }
 
 </script>
+<div id="app-version" style="text-align:center;font-size:.7rem;color:var(--muted);padding:12px 0 8px;border-top:1px solid var(--border);margin-top:24px">v1.3.0 &mdash; 2026-03-31</div>
 </body>
 </html>
