@@ -2631,32 +2631,32 @@ function export12mPDF() {
     if (doel && doel.nettoPerMaand) {
       const target = doel.nettoPerMaand;
       if (mAfb === null) {
-        badgeHtml = '<span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">Geen data</span> <span style="color:#94a3b8;font-size:9px">doel: '+fmtE(target)+'</span>';
+        badgeHtml = '<span style="background:#fef3c7;color:#92400e;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700">Geen data</span> <span style="color:#94a3b8;font-size:11px">doel: '+fmtE(target)+'</span>';
         rowBg = '#fffbeb';
       } else if (mAfb >= target) {
-        badgeHtml = '<span style="background:#dcfce7;color:#15803d;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">✓ Gehaald</span> <span style="color:#15803d;font-size:9px">doel: '+fmtE(target)+'</span>';
+        badgeHtml = '<span style="background:#dcfce7;color:#15803d;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700">✓ Gehaald</span> <span style="color:#15803d;font-size:11px">doel: '+fmtE(target)+'</span>';
         rowBg = '#f0fdf4';
       } else if (mAfb < 0) {
-        badgeHtml = '<span style="background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">↑ Gestegen</span> <span style="color:#94a3b8;font-size:9px">doel: '+fmtE(target)+'</span>';
+        badgeHtml = '<span style="background:#fee2e2;color:#991b1b;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700">↑ Gestegen</span> <span style="color:#94a3b8;font-size:11px">doel: '+fmtE(target)+'</span>';
         rowBg = '#fffbeb';
       } else if (mAfb === 0) {
-        badgeHtml = '<span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">Geen afbouw</span> <span style="color:#94a3b8;font-size:9px">doel: '+fmtE(target)+'</span>';
+        badgeHtml = '<span style="background:#fef3c7;color:#92400e;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700">Geen afbouw</span> <span style="color:#94a3b8;font-size:11px">doel: '+fmtE(target)+'</span>';
         rowBg = '#fffbeb';
       } else {
-        badgeHtml = '<span style="background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">⚠ €'+fmt(target-mAfb)+' tekort</span> <span style="color:#94a3b8;font-size:9px">doel: '+fmtE(target)+'</span>';
+        badgeHtml = '<span style="background:#fee2e2;color:#991b1b;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700">⚠ €'+fmt(target-mAfb)+' tekort</span> <span style="color:#94a3b8;font-size:11px">doel: '+fmtE(target)+'</span>';
         rowBg = '#fef2f2';
       }
     }
 
     return '<tr style="background:'+rowBg+'">'
-      +'<td style="padding:4px 8px;font-size:10px;color:#6b7394">'+a.nr+'</td>'
-      +'<td style="padding:4px 8px;font-size:11px;font-weight:500">'+a.naam+'</td>'
-      +'<td style="padding:4px 8px;font-size:10px;text-align:right;font-variant-numeric:tabular-nums">'+fmtE(a.totaal)+'</td>'
-      +'<td style="padding:4px 8px;font-size:10px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">'+fmtE(a.oud12)+'</td>'
-      +'<td style="padding:4px 8px;text-align:center"><span style="background:'+pc+';padding:1px 6px;border-radius:10px;font-size:10px;font-weight:600">'+fmtP(pct)+'</span></td>'
-      +'<td style="padding:4px 8px;font-size:10px;text-align:right;color:'+pijlKleur(dif)+';font-variant-numeric:tabular-nums">'+pijl(dif)+'</td>'
-      +'<td style="padding:4px 8px;font-size:10px;text-align:right;color:'+pijlKleur(mAfb)+';font-variant-numeric:tabular-nums">'+pijl(mAfb)+'</td>'
-      +'<td style="padding:4px 8px;font-size:10px;white-space:nowrap">'+badgeHtml+'</td>'
+      +'<td class="r" style="color:#6b7394;width:40px">'+a.nr+'</td>'
+      +'<td style="font-weight:600">'+a.naam+'</td>'
+      +'<td class="r" style="font-variant-numeric:tabular-nums">'+fmtE(a.totaal)+'</td>'
+      +'<td class="r" style="font-weight:700;font-variant-numeric:tabular-nums">'+fmtE(a.oud12)+'</td>'
+      +'<td class="c"><span style="background:'+pc+';padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600">'+fmtP(pct)+'</span></td>'
+      +'<td class="r" style="color:'+pijlKleur(dif)+';font-variant-numeric:tabular-nums">'+pijl(dif)+'</td>'
+      +'<td class="r" style="color:'+pijlKleur(mAfb)+';font-variant-numeric:tabular-nums;font-weight:600">'+pijl(mAfb)+'</td>'
+      +'<td style="white-space:nowrap">'+badgeHtml+'</td>'
       +'</tr>';
   }).join('');
 
@@ -2672,14 +2672,14 @@ function export12mPDF() {
     : '—';
 
   const totRow = '<tr style="background:#fffbeb;border-top:2px solid #d97706;font-weight:700">'
-    +'<td style="padding:5px 8px"></td>'
-    +'<td style="padding:5px 8px">Totaal</td>'
-    +'<td style="padding:5px 8px;text-align:right">'+fmtE(totaal)+'</td>'
-    +'<td style="padding:5px 8px;text-align:right">'+fmtE(oud12tot)+'</td>'
-    +'<td style="padding:5px 8px;text-align:center"><span style="background:'+totPc+';padding:1px 6px;border-radius:10px;font-size:10px;font-weight:600">'+fmtP(totPct)+'</span></td>'
-    +'<td style="padding:5px 8px;text-align:right;color:'+pijlKleur(totDelta)+'">'+pijl(totDelta)+'</td>'
-    +'<td style="padding:5px 8px;text-align:right;color:'+pijlKleur(totMaand)+'">'+pijl(totMaand)+'</td>'
-    +'<td style="padding:5px 8px;color:'+vKleurExport+';font-weight:700">'+vTekstExport+'</td>'
+    +'<td class="r" style="color:#6b7394"></td>'
+    +'<td>Totaal</td>'
+    +'<td class="r">'+fmtE(totaal)+'</td>'
+    +'<td class="r">'+fmtE(oud12tot)+'</td>'
+    +'<td class="c"><span style="background:'+totPc+';padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600">'+fmtP(totPct)+'</span></td>'
+    +'<td class="r" style="color:'+pijlKleur(totDelta)+'">'+pijl(totDelta)+'</td>'
+    +'<td class="r" style="color:'+pijlKleur(totMaand)+'">'+pijl(totMaand)+'</td>'
+    +'<td style="color:'+vKleurExport+';font-size:13px">'+vTekstExport+'</td>'
     +'</tr>';
 
   // Bereken totaal doelstelling en verschil voor PDF
@@ -2689,66 +2689,53 @@ function export12mPDF() {
   const verschilKleur = verschilPDF !== null ? (verschilPDF >= 0 ? '#15803d' : '#991b1b') : '#94a3b8';
   const verschilTekst = verschilPDF !== null ? (verschilPDF >= 0 ? '✓ '+fmtE(verschilPDF)+' voor op doel' : '⚠ '+fmtE(Math.abs(verschilPDF))+' tekort op doel') : '—';
 
-  // 1. Legenda/uitlegblok
-  const legendaHtml = '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#1e3a6e;line-height:1.8">'
-    +'<strong>Wat is 12+ maanden voorraad?</strong> Artikelen die al meer dan 12 maanden op voorraad liggen en prioriteit hebben voor afbouw.<br>'
-    +'<strong>Maanddoel:</strong> Per afdeling is een streefbedrag vastgesteld dat deze maand afgebouwd moet worden.<br>'
-    +'<strong>Kleuren:</strong> &nbsp;'
-    +'<span style="background:#dcfce7;color:#15803d;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600">✓ Gehaald</span>&nbsp;'
-    +'<span style="background:#fee2e2;color:#991b1b;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600">Tekort</span>&nbsp;'
-    +'<span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600">Geen afbouw</span>'
-    +'</div>';
-
-  // 2. KPI-kaartjes (vervangt de lange samenvattingsregel)
   const kpiKleur = (v) => v === null ? '#1e2340' : v >= 0 ? '#15803d' : '#991b1b';
   const tekortBedrag = (verschilPDF !== null && verschilPDF < 0) ? Math.abs(verschilPDF) : 0;
+
   const kpiHtml = eersteVanMaand
-    ? '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px">'
-      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Begin maand</div><div style="font-size:14px;font-weight:700;font-family:monospace">'+fmtE(beginTotaal)+'</div></div>'
-      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Huidig</div><div style="font-size:14px;font-weight:700;font-family:monospace">'+fmtE(oud12tot)+'</div></div>'
-      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Afgebouwd</div><div style="font-size:14px;font-weight:700;font-family:monospace;color:'+kpiKleur(maandAfgebouwd)+'">'+fmtE(maandAfgebouwd)+'</div></div>'
-      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Maanddoel</div><div style="font-size:14px;font-weight:700;font-family:monospace">'+(totDoelPDF>0?fmtE(totDoelPDF):'—')+'</div></div>'
-      +'<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Tekort op doel</div><div style="font-size:14px;font-weight:700;font-family:monospace;color:#991b1b">'+(totDoelPDF>0?fmtE(tekortBedrag):'—')+'</div></div>'
+    ? '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:22px">'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:center"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6b7394;margin-bottom:6px">Begin maand</div><div style="font-size:18px;font-weight:700">'+fmtE(beginTotaal)+'</div></div>'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:center"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6b7394;margin-bottom:6px">Huidig</div><div style="font-size:18px;font-weight:700">'+fmtE(oud12tot)+'</div></div>'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:center"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6b7394;margin-bottom:6px">Afgebouwd</div><div style="font-size:18px;font-weight:700;color:'+kpiKleur(maandAfgebouwd)+'">'+fmtE(maandAfgebouwd)+'</div></div>'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:center"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6b7394;margin-bottom:6px">Maanddoel</div><div style="font-size:18px;font-weight:700">'+(totDoelPDF>0?fmtE(totDoelPDF):'—')+'</div></div>'
+      +'<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px;text-align:center"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6b7394;margin-bottom:6px">Tekort op doel</div><div style="font-size:18px;font-weight:700;color:#991b1b">'+(totDoelPDF>0?fmtE(tekortBedrag):'—')+'</div></div>'
       +'</div>'
     : '';
-
-  const samenvattingHtml = legendaHtml + kpiHtml;
 
   const periodeStr = eersteVanMaand
     ? 'Periode: '+eersteVanMaand.datum+' t/m '+curr.datum+(dagen?' ('+dagen+' dagen)':'')+' · Vestiging 853'
     : 'Peildatum: '+curr.datum+' · Vestiging 853';
 
-  const fname12m = '12maanden-analyse-'+curr.datum+'.png';
-  const pw = window.open('','_blank','width=1200,height=1200');
+  const pw = window.open('','_blank','width=1300,height=1400');
   pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>12+ Maanden '+curr.datum+'</title>'
-    +'<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>'
-    +'<style>*{margin:0;padding:0}body{font-family:Calibri,Arial;padding:20px}@page{margin:15mm}'
-    +'.header{background:#0f2b5b;color:white;padding:16px;border-radius:8px;margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}'
-    +'.header-text h1{font-size:17px}.header-text .sub{font-size:10px;opacity:.8;margin-top:3px}'
-    +'.export-img-btn{background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:7px 13px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0}'
-    +'.export-img-btn:hover{background:rgba(255,255,255,.28)}'
-    +'@media print{.export-img-btn{display:none}}'
-    +'table{width:100%;border-collapse:collapse}thead tr{background:#f0f2f8}'
-    +'th{padding:6px 8px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#6b7394;text-align:left;border-bottom:2px solid #dde1ef}'
+    +'<style>'
+    +'*{margin:0;padding:0;box-sizing:border-box}'
+    +'body{font-family:Calibri,Arial,sans-serif;font-size:13px;color:#1e2340;padding:28px 32px;background:#fff}'
+    +'.header{background:#0f2b5b;color:white;padding:20px 24px;border-radius:10px;margin-bottom:22px}'
+    +'.header h1{font-size:22px;font-weight:700;margin-bottom:4px}'
+    +'.header .sub{font-size:13px;opacity:.75}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:12px}'
+    +'thead tr{background:#f0f2f8}'
+    +'th{padding:9px 11px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#4a5080;border-bottom:2px solid #d0d5ee}'
     +'th.r{text-align:right}th.c{text-align:center}'
-    +'td{border-bottom:1px solid #e2e8f0}'
-    +'.footer{margin-top:16px;font-size:10px;text-align:center;color:#94a3b8}'
+    +'td{padding:8px 11px;border-bottom:1px solid #eaecf4;font-size:13px;vertical-align:middle}'
+    +'td.r{text-align:right}td.c{text-align:center}'
+    +'tbody tr:hover{background:#f8f9ff}'
+    +'.badge{display:inline-block;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700}'
+    +'.footer{margin-top:18px;font-size:11px;text-align:center;color:#94a3b8;border-top:1px solid #eaecf4;padding-top:12px}'
     +'</style></head><body>'
-    +'<div class="header"><div class="header-text"><h1>📊 Analyse 12+ Maanden</h1><div class="sub">'+periodeStr+'</div></div>'
-    +'<button class="export-img-btn" id="exportImgBtn" onclick="exportAsImage()">📸 Exporteer als afbeelding</button></div>'
-    +samenvattingHtml
+    +'<div class="header"><h1>Analyse 12+ Maanden Voorraad</h1><div class="sub">'+periodeStr+'</div></div>'
+    +kpiHtml
     +'<table><thead><tr>'
     +'<th>Nr</th><th>Afdeling</th><th class="r">Totale Waarde</th><th class="r">Waarde 12+ mnd</th>'
     +'<th class="c">% Oudheid</th><th class="r">Afbouw gister</th><th class="r">Afgebouwd deze maand</th><th>Status vs. doel</th>'
     +'</tr></thead><tbody>'+rows+totRow+'</tbody></table>'
-    +'<div style="margin-top:10px;font-size:10px;color:#6b7394;display:flex;gap:16px;flex-wrap:wrap">'
+    +'<div style="font-size:12px;color:#6b7394;display:flex;gap:20px;flex-wrap:wrap;margin-top:6px">'
     +'<span>🟢 Doel gehaald</span><span>🔴 Tekort op doel</span><span>🟠 Geen afbouw deze maand</span>'
     +'</div>'
     +'<div class="footer">Gegenereerd: '+new Date().toLocaleString('nl-NL')+'</div>'
-    +'<script>function exportAsImage(){var btn=document.getElementById("exportImgBtn");btn.style.display="none";html2canvas(document.body,{scrollX:0,scrollY:0,width:document.body.scrollWidth,height:document.body.scrollHeight,windowWidth:document.body.scrollWidth,windowHeight:document.body.scrollHeight,useCORS:true}).then(function(canvas){btn.style.display="";var a=document.createElement("a");a.download="'+fname12m+'";a.href=canvas.toDataURL("image/png");a.click();});}<\/script>'
     +'</body></html>');
   pw.document.close();
-  setTimeout(() => pw.print(), 250);
 }
 
 function exportMaandProgressiePDF(tag, oudKey, title) {
@@ -2904,6 +2891,6 @@ function importBackup(input) {
 }
 
 </script>
-<div id="app-version" style="text-align:center;font-size:.7rem;color:var(--muted);padding:12px 0 8px;border-top:1px solid var(--border);margin-top:24px">v1.3.0 &mdash; 2026-03-31</div>
+<div id="app-version" style="text-align:center;font-size:.7rem;color:var(--muted);padding:12px 0 8px;border-top:1px solid var(--border);margin-top:24px">v1.4.0 &mdash; 2026-04-01</div>
 </body>
 </html>
