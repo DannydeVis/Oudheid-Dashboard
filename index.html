@@ -607,7 +607,6 @@ function handleArtikelUploadManager(input) {
         const artikelNr = row[1].toString().trim();
         const fabrikant = (row[2] || '').toString().trim();
         const omschrijving = (row[3] || '').toString().trim();
-        console.log('[DEBUG vkPrijs] artikelNr:', artikelNr, '| row[4]:', row[4], '| type:', typeof row[4], '| row.length:', row.length, '| row[0..6]:', row.slice(0,6));
         const vkPrijs = typeof row[4] === 'number' ? row[4] : (parseFloat((row[4] || '').toString().replace(/[^0-9,]/g, '').replace(',', '.')) || 0);
         
         // Detecteer formaat op basis van totaal aantal kolommen
@@ -615,14 +614,15 @@ function handleArtikelUploadManager(input) {
         let waarde12plus = 0;
         let aantal12plus = 0;
         
+        const parseDutchFloat = v => typeof v === 'number' ? v : (parseFloat((v || '').toString().replace(/[^0-9,]/g, '').replace(',', '.')) || 0);
         if (totaalKolommen <= 28) {
           // Nieuw formaat (27 kolommen): 10-12 is samengevoegd
           // Waarde: kolom 20 (10-12) + 22 (13-24) + 24 (24+)
-          const waarde1012 = parseFloat(row[20] ? row[20].toString().replace(/[^0-9,.]/g, '').replace(',', '.') : 0);
-          const waarde1324 = parseFloat(row[22] ? row[22].toString().replace(/[^0-9,.]/g, '').replace(',', '.') : 0);
-          const waarde24plus = parseFloat(row[24] ? row[24].toString().replace(/[^0-9,.]/g, '').replace(',', '.') : 0);
+          const waarde1012 = parseDutchFloat(row[20]);
+          const waarde1324 = parseDutchFloat(row[22]);
+          const waarde24plus = parseDutchFloat(row[24]);
           waarde12plus = waarde1012 + waarde1324 + waarde24plus;
-          
+
           // Aantal: kolom 19 (10-12) + 21 (13-24) + 23 (24+)
           const aantal1012 = parseInt(row[19] || 0);
           const aantal1324 = parseInt(row[21] || 0);
@@ -631,9 +631,9 @@ function handleArtikelUploadManager(input) {
         } else {
           // Oud formaat (31 kolommen): 10, 11, 12 apart
           // Waarde: kolom 24 (12) + 26 (13-24) + 28 (24+)
-          const waarde12 = parseFloat(row[24] ? row[24].toString().replace(/[^0-9,.]/g, '').replace(',', '.') : 0);
-          const waarde1324 = parseFloat(row[26] ? row[26].toString().replace(/[^0-9,.]/g, '').replace(',', '.') : 0);
-          const waarde24plus = parseFloat(row[28] ? row[28].toString().replace(/[^0-9,.]/g, '').replace(',', '.') : 0);
+          const waarde12 = parseDutchFloat(row[24]);
+          const waarde1324 = parseDutchFloat(row[26]);
+          const waarde24plus = parseDutchFloat(row[28]);
           waarde12plus = waarde12 + waarde1324 + waarde24plus;
           
           // Aantal: kolom 23 (12) + 25 (13-24) + 27 (24+)
@@ -2898,6 +2898,6 @@ function importBackup(input) {
 }
 
 </script>
-<div id="app-version" style="text-align:center;font-size:.7rem;color:var(--muted);padding:12px 0 8px;border-top:1px solid var(--border);margin-top:24px">v1.4.2 &mdash; 2026-04-03</div>
+<div id="app-version" style="text-align:center;font-size:.7rem;color:var(--muted);padding:12px 0 8px;border-top:1px solid var(--border);margin-top:24px">v1.4.3 &mdash; 2026-04-03</div>
 </body>
 </html>
