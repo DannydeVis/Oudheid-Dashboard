@@ -607,7 +607,7 @@ function handleArtikelUploadManager(input) {
         const artikelNr = row[1].toString().trim();
         const fabrikant = (row[2] || '').toString().trim();
         const omschrijving = (row[3] || '').toString().trim();
-        const vkPrijs = parseFloat(row[4] ? row[4].toString().replace(/[^0-9,.]/g, '').replace(',', '.') : 0);
+        const vkPrijs = parseFloat((row[4] || '').toString().replace(/[€\s]/g, '').replace(/\./g, '').replace(',', '.').trim()) || 0;
         
         // Detecteer formaat op basis van totaal aantal kolommen
         const totaalKolommen = row.length;
