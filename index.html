@@ -607,6 +607,7 @@ function handleArtikelUploadManager(input) {
         const artikelNr = row[1].toString().trim();
         const fabrikant = (row[2] || '').toString().trim();
         const omschrijving = (row[3] || '').toString().trim();
+        console.log('[DEBUG vkPrijs] artikelNr:', artikelNr, '| row[4]:', row[4], '| type:', typeof row[4], '| row.length:', row.length, '| row[0..6]:', row.slice(0,6));
         const vkPrijs = typeof row[4] === 'number' ? row[4] : (parseFloat((row[4] || '').toString().replace(/[^0-9,]/g, '').replace(',', '.')) || 0);
         
         // Detecteer formaat op basis van totaal aantal kolommen
