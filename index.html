@@ -2495,15 +2495,12 @@ function export3mPDF() {
   const afds = [...curr.afdelingen].filter(a => a.oud3 > 0).sort((a,b) => parseInt(a.nr) - parseInt(b.nr));
   const totaal = afds.reduce((s,a) => s+a.totaal, 0);
   const oud3tot = afds.reduce((s,a) => s+a.oud3, 0);
-  const prevOud3 = prev ? prev.afdelingen.reduce((s,a) => s+a.oud3, 0) : null;
   const beginTotaal = eersteVanMaand ? eersteVanMaand.afdelingen.reduce((s,a) => s+a.oud3, 0) : null;
   const maandAfgebouwd = beginTotaal !== null ? beginTotaal - oud3tot : null;
   const gemPerDag = (maandAfgebouwd !== null && dagen) ? maandAfgebouwd / dagen : null;
 
-  // Kleur helper
-  const kleurV = v => v === null ? '' : v >= 0 ? '#16a34a' : '#dc2626';
   const pijl = v => v === null ? '—' : v > 0 ? '▼ '+fmtE(v) : v < 0 ? '▲ '+fmtE(Math.abs(v)) : '±0';
-  const pijlKleur = v => v === null ? '#94a3b8' : v > 0 ? '#16a34a' : v < 0 ? '#dc2626' : '#94a3b8';
+  const pijlKleur = v => v === null ? '#94a3b8' : v > 0 ? '#15803d' : v < 0 ? '#991b1b' : '#94a3b8';
   const pillCls = p => p < 0.15 ? '#dcfce7;color:#15803d' : p < 0.30 ? '#fef3c7;color:#92400e' : '#fee2e2;color:#991b1b';
 
   let totDelta = null, totMaand = 0;
@@ -2516,100 +2513,85 @@ function export3mPDF() {
     if (dif !== null) totDelta = (totDelta||0) + dif;
     const pct = a.totaal > 0 ? a.oud3/a.totaal : 0;
     const pc = pillCls(pct);
-    // 3. Rijkleuring + 4. Trendbadge
     let rowBg = '', badgeHtml = '<span style="color:#94a3b8">—</span>';
     if (mAfb !== null) {
       if (mAfb > 0) {
         rowBg = '#f0fdf4';
-        badgeHtml = '<span style="background:#dcfce7;color:#15803d;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">▼ Afgebouwd</span>';
+        badgeHtml = '<span style="background:#dcfce7;color:#15803d;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700">▼ Afgebouwd</span>';
       } else if (mAfb < 0) {
         rowBg = '#fef2f2';
-        badgeHtml = '<span style="background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">▲ Gestegen</span>';
+        badgeHtml = '<span style="background:#fee2e2;color:#991b1b;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700">▲ Gestegen</span>';
       } else {
         rowBg = '#fffbeb';
-        badgeHtml = '<span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700">Geen afbouw</span>';
+        badgeHtml = '<span style="background:#fef3c7;color:#92400e;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700">Geen afbouw</span>';
       }
     }
     return '<tr style="background:'+rowBg+'">'
-      +'<td style="padding:4px 8px;font-size:10px;color:#6b7394">'+a.nr+'</td>'
-      +'<td style="padding:4px 8px;font-size:11px;font-weight:500">'+a.naam+'</td>'
-      +'<td style="padding:4px 8px;font-size:10px;text-align:right;font-variant-numeric:tabular-nums">'+fmtE(a.totaal)+'</td>'
-      +'<td style="padding:4px 8px;font-size:10px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">'+fmtE(a.oud3)+'</td>'
-      +'<td style="padding:4px 8px;text-align:center"><span style="background:'+pc+';padding:1px 6px;border-radius:10px;font-size:10px;font-weight:600">'+fmtP(pct)+'</span></td>'
-      +'<td style="padding:4px 8px;font-size:10px;text-align:right;color:'+pijlKleur(dif)+';font-variant-numeric:tabular-nums">'+pijl(dif)+'</td>'
-      +'<td style="padding:4px 8px;font-size:10px;text-align:right;color:'+pijlKleur(mAfb)+';font-variant-numeric:tabular-nums">'+pijl(mAfb)+'</td>'
-      +'<td style="padding:4px 8px;font-size:10px;white-space:nowrap">'+badgeHtml+'</td>'
+      +'<td class="r" style="color:#6b7394;width:40px">'+a.nr+'</td>'
+      +'<td style="font-weight:600">'+a.naam+'</td>'
+      +'<td class="r" style="font-variant-numeric:tabular-nums">'+fmtE(a.totaal)+'</td>'
+      +'<td class="r" style="font-weight:700;font-variant-numeric:tabular-nums">'+fmtE(a.oud3)+'</td>'
+      +'<td class="c"><span style="background:'+pc+';padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600">'+fmtP(pct)+'</span></td>'
+      +'<td class="r" style="color:'+pijlKleur(dif)+';font-variant-numeric:tabular-nums">'+pijl(dif)+'</td>'
+      +'<td class="r" style="color:'+pijlKleur(mAfb)+';font-variant-numeric:tabular-nums;font-weight:600">'+pijl(mAfb)+'</td>'
+      +'<td style="white-space:nowrap">'+badgeHtml+'</td>'
       +'</tr>';
   }).join('');
 
   const totPct = totaal > 0 ? oud3tot/totaal : 0;
   const totPc = pillCls(totPct);
   const totRow = '<tr style="background:#fffbeb;border-top:2px solid #d97706;font-weight:700">'
-    +'<td style="padding:5px 8px"></td>'
-    +'<td style="padding:5px 8px">Totaal</td>'
-    +'<td style="padding:5px 8px;text-align:right">'+fmtE(totaal)+'</td>'
-    +'<td style="padding:5px 8px;text-align:right">'+fmtE(oud3tot)+'</td>'
-    +'<td style="padding:5px 8px;text-align:center"><span style="background:'+totPc+';padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600">'+fmtP(totPct)+'</span></td>'
-    +'<td style="padding:5px 8px;text-align:right;color:'+pijlKleur(totDelta)+'">'+pijl(totDelta)+'</td>'
-    +'<td style="padding:5px 8px;text-align:right;color:'+pijlKleur(totMaand)+'">'+pijl(totMaand)+'</td>'
+    +'<td class="r" style="color:#6b7394"></td>'
+    +'<td>Totaal</td>'
+    +'<td class="r">'+fmtE(totaal)+'</td>'
+    +'<td class="r">'+fmtE(oud3tot)+'</td>'
+    +'<td class="c"><span style="background:'+totPc+';padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600">'+fmtP(totPct)+'</span></td>'
+    +'<td class="r" style="color:'+pijlKleur(totDelta)+'">'+pijl(totDelta)+'</td>'
+    +'<td class="r" style="color:'+pijlKleur(totMaand)+'">'+pijl(totMaand)+'</td>'
     +'<td></td>'
     +'</tr>';
 
-  // 1. Legenda/uitlegblok
-  const legendaHtml3m = '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#1e3a6e;line-height:1.8">'
-    +'<strong>Wat is 3+ maanden voorraad?</strong> Artikelen die al meer dan 3 maanden op voorraad liggen en in de gaten worden gehouden.<br>'
-    +'<strong>Trend deze maand:</strong> Per rij zie je hoeveel er afgebouwd is ten opzichte van het begin van de maand.<br>'
-    +'<strong>Kleuren:</strong> &nbsp;'
-    +'<span style="background:#dcfce7;color:#15803d;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600">▼ Afgebouwd</span>&nbsp;'
-    +'<span style="background:#fee2e2;color:#991b1b;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600">▲ Gestegen</span>&nbsp;'
-    +'<span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600">Geen afbouw</span>'
-    +'</div>';
+  const kpiKleur = v => v === null ? '#1e2340' : v >= 0 ? '#15803d' : '#991b1b';
 
-  // 2. KPI-kaartjes
-  const kpiHtml3m = eersteVanMaand
-    ? '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">'
-      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Begin maand</div><div style="font-size:14px;font-weight:700;font-family:monospace">'+fmtE(beginTotaal)+'</div></div>'
-      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Huidig</div><div style="font-size:14px;font-weight:700;font-family:monospace">'+fmtE(oud3tot)+'</div></div>'
-      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Afgebouwd</div><div style="font-size:14px;font-weight:700;font-family:monospace;color:'+(maandAfgebouwd>=0?'#15803d':'#991b1b')+'">'+fmtE(maandAfgebouwd)+'</div></div>'
-      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px;text-align:center"><div style="font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6b7394;margin-bottom:4px">Gem. per dag</div><div style="font-size:14px;font-weight:700;font-family:monospace;color:'+(gemPerDag!==null?(gemPerDag>=0?'#15803d':'#991b1b'):'#1e2340')+'">'+(gemPerDag!==null?fmtE(gemPerDag):'—')+'</div></div>'
+  const kpiHtml = eersteVanMaand
+    ? '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px">'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:center"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6b7394;margin-bottom:6px">Begin maand</div><div style="font-size:18px;font-weight:700">'+fmtE(beginTotaal)+'</div></div>'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:center"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6b7394;margin-bottom:6px">Huidig</div><div style="font-size:18px;font-weight:700">'+fmtE(oud3tot)+'</div></div>'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:center"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6b7394;margin-bottom:6px">Afgebouwd</div><div style="font-size:18px;font-weight:700;color:'+kpiKleur(maandAfgebouwd)+'">'+fmtE(maandAfgebouwd)+'</div></div>'
+      +'<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;text-align:center"><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6b7394;margin-bottom:6px">Gem. per dag</div><div style="font-size:18px;font-weight:700;color:'+kpiKleur(gemPerDag)+'">'+(gemPerDag!==null?fmtE(gemPerDag):'—')+'</div></div>'
       +'</div>'
     : '';
 
-  // Samenvatting balk
-  const samenvattingHtml = legendaHtml3m + kpiHtml3m;
-
   const periodeStr = eersteVanMaand
-    ? 'Periode: '+eersteVanMaand.datum+' t/m '+curr.datum+(dagen?' ('+dagen+' dagen)':'')+' · Vestiging 853'
+    ? 'Periode: '+eersteVanMaand.datum+' t/m '+curr.datum+(dagen?' ('+dagen+' dagen)':'') +' · Vestiging 853'
     : 'Peildatum: '+curr.datum+' · Vestiging 853';
 
-  const pw = window.open('','_blank','width=1100,height=1200');
-  const fname3m = '3maanden-analyse-'+curr.datum+'.png';
+  const pw = window.open('','_blank','width=1300,height=1400');
   pw.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>3+ Maanden '+curr.datum+'</title>'
-    +'<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>'
-    +'<style>*{margin:0;padding:0}body{font-family:Calibri,Arial;padding:20px}@page{margin:15mm}'
-    +'.header{background:#0f2b5b;color:white;padding:16px;border-radius:8px;margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}'
-    +'.header-text h1{font-size:17px}.header-text .sub{font-size:10px;opacity:.8;margin-top:3px}'
-    +'.export-img-btn{background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:7px 13px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0}'
-    +'.export-img-btn:hover{background:rgba(255,255,255,.28)}'
-    +'@media print{.export-img-btn{display:none}}'
-    +'table{width:100%;border-collapse:collapse}thead tr{background:#f0f2f8}'
-    +'th{padding:6px 8px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#6b7394;text-align:left;border-bottom:2px solid #dde1ef}'
+    +'<style>'
+    +'*{margin:0;padding:0;box-sizing:border-box}'
+    +'body{font-family:Calibri,Arial,sans-serif;font-size:13px;color:#1e2340;padding:28px 32px;background:#fff}'
+    +'.header{background:#0f2b5b;color:white;padding:20px 24px;border-radius:10px;margin-bottom:22px}'
+    +'.header h1{font-size:22px;font-weight:700;margin-bottom:4px}'
+    +'.header .sub{font-size:13px;opacity:.75}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:12px}'
+    +'thead tr{background:#f0f2f8}'
+    +'th{padding:9px 11px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#4a5080;border-bottom:2px solid #d0d5ee}'
     +'th.r{text-align:right}th.c{text-align:center}'
-    +'td{border-bottom:1px solid #e2e8f0}'
-    +'.footer{margin-top:16px;font-size:10px;text-align:center;color:#94a3b8}'
+    +'td{padding:8px 11px;border-bottom:1px solid #eaecf4;font-size:13px;vertical-align:middle}'
+    +'td.r{text-align:right}td.c{text-align:center}'
+    +'.footer{margin-top:18px;font-size:11px;text-align:center;color:#94a3b8;border-top:1px solid #eaecf4;padding-top:12px}'
     +'</style></head><body>'
-    +'<div class="header"><div class="header-text"><h1>📊 Analyse 3+ Maanden</h1><div class="sub">'+periodeStr+'</div></div>'
-    +'<button class="export-img-btn" id="exportImgBtn" onclick="exportAsImage()">📸 Exporteer als afbeelding</button></div>'
-    +samenvattingHtml
+    +'<div class="header"><h1>Analyse 3+ Maanden Voorraad</h1><div class="sub">'+periodeStr+'</div></div>'
+    +kpiHtml
     +'<table><thead><tr>'
     +'<th>Nr</th><th>Afdeling</th><th class="r">Totale Waarde</th><th class="r">Waarde 3+ mnd</th>'
     +'<th class="c">% Oudheid</th><th class="r">Afbouw gister</th><th class="r">Afgebouwd deze maand</th><th>Trend</th>'
     +'</tr></thead><tbody>'+rows+totRow+'</tbody></table>'
-    +'<div style="margin-top:10px;font-size:10px;color:#6b7394;display:flex;gap:16px;flex-wrap:wrap">'
+    +'<div style="font-size:12px;color:#6b7394;display:flex;gap:20px;flex-wrap:wrap;margin-top:6px">'
     +'<span>🟢 Voorraad afgebouwd</span><span>🔴 Voorraad gestegen</span><span>🟠 Geen afbouw deze maand</span>'
     +'</div>'
     +'<div class="footer">Gegenereerd: '+new Date().toLocaleString('nl-NL')+'</div>'
-    +'<script>function exportAsImage(){var btn=document.getElementById("exportImgBtn");btn.style.display="none";html2canvas(document.body,{scrollX:0,scrollY:0,width:document.body.scrollWidth,height:document.body.scrollHeight,windowWidth:document.body.scrollWidth,windowHeight:document.body.scrollHeight,useCORS:true}).then(function(canvas){btn.style.display="";var a=document.createElement("a");a.download="'+fname3m+'";a.href=canvas.toDataURL("image/png");a.click();});}<\/script>'
     +'</body></html>');
   pw.document.close();
   setTimeout(() => pw.print(), 250);
@@ -2921,6 +2903,6 @@ function importBackup(input) {
 }
 
 </script>
-<div id="app-version" style="text-align:center;font-size:.7rem;color:var(--muted);padding:12px 0 8px;border-top:1px solid var(--border);margin-top:24px">v1.5.0 &mdash; 2026-04-21</div>
+<div id="app-version" style="text-align:center;font-size:.7rem;color:var(--muted);padding:12px 0 8px;border-top:1px solid var(--border);margin-top:24px">v1.5.1 &mdash; 2026-04-21</div>
 </body>
 </html>
